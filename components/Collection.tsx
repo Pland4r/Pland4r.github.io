@@ -43,8 +43,8 @@ export default function Collection() {
             <p className="eyebrow">The collection</p>
             <h2 className="h1">Six cars. Six cases.</h2>
             <p className="lede">
-              Hover any case to see it move. Open it for the full artwork breakdown and
-              the untouched product photo.
+              Open any case for the artwork breakdown, a 3D turn you can move, and the
+              untouched product photo.
             </p>
           </Reveal>
 

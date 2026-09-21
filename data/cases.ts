@@ -12,8 +12,8 @@ export type Case = {
   model: string;
   /** The quoted line the artwork itself uses. */
   caption: string;
-  /** Gloss White / Gloss Black — the shell the artwork is printed on. */
-  shell: 'white' | 'black';
+  /** The shell the artwork is printed on — drives the swatch on each card. */
+  shell: 'white' | 'black' | 'pink';
   shellLabel: string;
   /** Accent colour pulled from the artwork, used for glow + hover states. */
   accent: string;
@@ -129,6 +129,78 @@ export const cases: Case[] = [
       'CLS 63 in oversized display type',
       'Side profile in gloss black',
       'Top-down schematics + signature detail',
+    ],
+  },
+  {
+    slug: 'porsche-911-brabus',
+    marque: 'Porsche',
+    model: '911 Brabus',
+    caption: '“Brabus engineering”',
+    shell: 'pink',
+    shellLabel: 'Dusty Pink',
+    accent: '#c9829a',
+    blurb:
+      'A Brabus-tuned 911 shot from the rear three-quarter, sitting under an ' +
+      'oversized PORSCHE wordmark with BRABUS outlined behind the car.',
+    printed: [
+      '911 · magenta script tag',
+      'PORSCHE solid, BRABUS outlined behind the car',
+      'Rear three-quarter 911 in matching pink',
+      'PORSCHE BRABUS 911 write-up, inset photo and barcode',
+    ],
+  },
+  {
+    slug: 'mclaren-senna',
+    marque: 'McLaren',
+    model: 'Senna',
+    caption: '“Named after Ayrton Senna”',
+    shell: 'pink',
+    shellLabel: 'Dusty Pink',
+    accent: '#d896a8',
+    blurb:
+      'The Senna in white and pink across the full width of the case, with a ' +
+      'magenta graffiti tag above and the model write-up along the foot.',
+    printed: [
+      'Magenta graffiti tag · SENNA',
+      'MCLAREN in oversized display type',
+      'Full-profile Senna with pink wheels and aero',
+      'MCLAREN SENNA write-up, inset panel and barcode',
+    ],
+  },
+  {
+    slug: 'porsche-911-gt3-rs-blush',
+    marque: 'Porsche',
+    model: '911 GT3 RS',
+    caption: '“525 HP · 296 km/h · 3.2 s”',
+    shell: 'pink',
+    shellLabel: 'Blush',
+    accent: '#b98a92',
+    blurb:
+      'Three cropped motorsport panels above a full pink GT3 RS, with the ' +
+      'Porsche Motorsport crest and the factory write-up underneath.',
+    printed: [
+      'PORSCHE MOTORSPORT wordmark and crest',
+      'GT3RS · three cropped panels of the car',
+      'Write-up: 386 kW (525 hp), 860 kg downforce at 285 km/h',
+      '525 HP · 296 KM/H · 3.2 S along the foot',
+    ],
+  },
+  {
+    slug: 'porsche-911-gt3-rs-pink',
+    marque: 'Porsche',
+    model: '911 GT3 RS',
+    caption: '“Pink”',
+    shell: 'black',
+    shellLabel: 'Gloss Black',
+    accent: '#ff7ab8',
+    blurb:
+      'Pink over gloss black — the GT3 RS in profile above a full spec column, ' +
+      'with a Rennsport car below.',
+    printed: [
+      'RENNSPORT · “German Made”',
+      'PORSCHE 911 GT3 RS · “Pink”',
+      'Max power 518 HP at 8,500 RPM · 3,996 cc · 81.5 mm stroke',
+      'Grand Tourismo · “Rennsport”',
     ],
   },
 ];

@@ -18,7 +18,8 @@ never touched, resized against its shell, or recoloured.
 Usage
     python scripts/assets.py            # everything
     python scripts/assets.py images     # stills only (fast)
-    python scripts/assets.py video      # clips + hero only
+    python scripts/assets.py video      # clips + hero, every case
+    python scripts/assets.py video <slug>...   # only those clips, plus the hero
 
 Requires: pillow, numpy, scipy, and ffmpeg on PATH.
     python -m pip install pillow numpy scipy
@@ -52,6 +53,10 @@ MAP = [
     ("WhatsApp Image 2026-09-21 at 13.40.59.jpeg", "porsche-911-gt2-rs"),
     ("WhatsApp Image 2026-09-21 at 13.41.03.jpeg", "bmw-m5-f90"),
     ("WhatsApp Image 2026-09-21 at 13.41.06.jpeg", "mercedes-amg-cls63"),
+    ("WhatsApp Image 2026-09-21 at 21.37.47.jpeg", "porsche-911-brabus"),
+    ("WhatsApp Image 2026-09-21 at 21.37.51.jpeg", "mclaren-senna"),
+    ("WhatsApp Image 2026-09-21 at 21.37.54.jpeg", "porsche-911-gt3-rs-blush"),
+    ("WhatsApp Image 2026-09-21 at 21.40.40.jpeg", "porsche-911-gt3-rs-pink"),
 ]
 
 # Glow colour per case, sampled from its own artwork. Keep in sync with
@@ -63,6 +68,10 @@ ACCENT = {
     "porsche-911-gt2-rs": (150, 90, 230),
     "bmw-m5-f90": (170, 175, 185),
     "mercedes-amg-cls63": (140, 160, 190),
+    "porsche-911-brabus": (210, 140, 165),
+    "mclaren-senna": (216, 150, 172),
+    "porsche-911-gt3-rs-blush": (200, 150, 156),
+    "porsche-911-gt3-rs-pink": (255, 120, 185),
 }
 
 SLUGS = [slug for _, slug in MAP]
@@ -366,12 +375,19 @@ def hero_clip(w: int = 1280, h: int = 720, secs: float = 16.0, dark: bool = Fals
         )
 
 
-def build_video() -> None:
-    """Both themes. Light lands in public/video, dark in public/video/dark."""
+def build_video(only: list[str] | None = None) -> None:
+    """
+    Both themes. Light lands in public/video, dark in public/video/dark.
+
+    `only` limits which product clips are rendered — adding a case should not
+    cost a re-render of the ones that have not changed. The hero is always
+    rebuilt, since it is a band of every case.
+    """
     os.makedirs(VIDEO, exist_ok=True)
+    slugs = [s for s in SLUGS if not only or s in only]
     for dark in (False, True):
         label = "dark" if dark else "light"
-        for slug in SLUGS:
+        for slug in slugs:
             print(f"  clip  {label:5s} {slug}", flush=True)
             product_clip(slug, dark=dark)
         print(f"  hero  {label}", flush=True)
@@ -388,6 +404,6 @@ if __name__ == "__main__":
         build_images()
     if what in ("all", "video"):
         print("video")
-        build_video()
+        build_video(only=sys.argv[2:] or None)
 
     print("done")

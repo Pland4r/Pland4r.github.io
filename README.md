@@ -61,9 +61,23 @@ video is ever downloaded.
 ## Adding a new case
 
 1. Drop the photo into `pic/`.
-2. Add a row to `MAP` in `scripts/assets.py` mapping the filename to a slug.
-3. Add a matching entry to `cases` in `data/cases.ts`.
-4. Run `npm run assets`.
+2. Add a row to `MAP` in `scripts/assets.py` mapping the filename to a slug,
+   and a glow colour for it in `ACCENT` just below.
+3. Add a matching entry to `cases` in `data/cases.ts`. A new shell colour also
+   needs a hex in `SWATCH` at the top of `components/CaseCard.tsx`.
+4. Build the assets:
+
+   ```bash
+   npm run assets:images                 # cheap, does every case
+   python scripts/assets.py video <slug> # only the new clip, plus the hero
+   ```
+
+   Passing slugs matters — `npm run assets:video` with no arguments re-renders
+   every clip in both themes, which takes far longer than it needs to.
+
+Copy that names the size of the collection (the hero counters, the collection
+heading, the Fit steps, the marque filters, the shell list) is all derived from
+`cases`, so none of it goes stale when you add one.
 
 ## Regenerating the images and videos
 

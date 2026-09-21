@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { cases, getCase } from '@/data/cases';
+import { Spell } from '@/data/count';
 import CaseCard from './CaseCard';
 import CaseSheet from './CaseSheet';
 import Reveal from './Reveal';
@@ -41,7 +42,9 @@ export default function Collection() {
         <div className="sec-head">
           <Reveal className="sec-head__text">
             <p className="eyebrow">The collection</p>
-            <h2 className="h1">Six cars. Six cases.</h2>
+            <h2 className="h1">
+              {Spell(cases.length)} cars. {Spell(cases.length)} cases.
+            </h2>
             <p className="lede">
               Open any case for the artwork breakdown, a 3D turn you can move, and the
               untouched product photo.

@@ -1,3 +1,5 @@
+import { cases } from '@/data/cases';
+import { spell } from '@/data/count';
 import { site } from '@/data/site';
 import Reveal from './Reveal';
 
@@ -36,7 +38,7 @@ export default function Fit() {
               <article className="feat">
                 <p className="feat__n mono">STEP 01</p>
                 <h3>Pick the design</h3>
-                <p>Choose from the six cases in the collection above.</p>
+                <p>Choose from the {spell(cases.length)} cases in the collection above.</p>
               </article>
               <article className="feat">
                 <p className="feat__n mono">STEP 02</p>

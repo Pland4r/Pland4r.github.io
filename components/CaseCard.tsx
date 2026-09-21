@@ -12,6 +12,13 @@ type Props = {
   onOpen: (slug: string) => void;
 };
 
+/** The dot on each card's shell badge. Keyed by `shell` in data/cases.ts. */
+const SWATCH: Record<Case['shell'], string> = {
+  white: '#f4f6f8',
+  black: '#0c0d10',
+  pink: '#c9829a',
+};
+
 /**
  * A product tile. The still image is what loads; the 6-second clip only starts
  * on hover or keyboard focus, so a visitor on mobile data never pays for six
@@ -66,7 +73,7 @@ export default function CaseCard({ item, onOpen }: Props) {
       <span className="card__shellbadge">
         <span
           className="card__swatch"
-          style={{ background: item.shell === 'white' ? '#f4f6f8' : '#0c0d10' }}
+          style={{ background: SWATCH[item.shell] }}
         />
         {item.shellLabel}
       </span>

@@ -8,6 +8,8 @@ const HERO_CASE = 'porsche-911-gt2-rs';
 
 export default function Hero() {
   const marques = Array.from(new Set(cases.map((c) => c.marque)));
+  // Derived, so adding a case in a new shell colour updates the hero by itself.
+  const shells = Array.from(new Set(cases.map((c) => c.shellLabel)));
   const lead = cases.find((c) => c.slug === HERO_CASE) ?? cases[0];
 
   return (
@@ -70,7 +72,7 @@ export default function Hero() {
             </div>
             <div>
               <dt>Shells</dt>
-              <dd>Gloss white / gloss black</dd>
+              <dd>{shells.join(' / ')}</dd>
             </div>
             <div>
               <dt>Imagery</dt>

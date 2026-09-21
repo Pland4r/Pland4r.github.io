@@ -1,0 +1,10 @@
+node_modules/
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+.DS_Store
+Thumbs.db
+
+# Working screenshots dropped into the project root — not part of the site.
+Capture d'écran*.png

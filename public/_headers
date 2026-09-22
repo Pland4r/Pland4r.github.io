@@ -1,0 +1,14 @@
+# Cloudflare Pages reads this from the build output. Next fingerprints
+# everything under /_next/static, so it can be cached forever; the media is
+# stable but replaceable, so it gets a week.
+/_next/static/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/video/*
+  Cache-Control: public, max-age=604800
+
+/cases/*
+  Cache-Control: public, max-age=604800
+
+/brand/*
+  Cache-Control: public, max-age=604800

@@ -135,9 +135,11 @@ export default function CaseSheet({ item, onClose }: Props) {
             <div style={{ display: 'grid', gap: 10 }}>
               <p className="eyebrow">{item.marque}</p>
               <h2 className="h2">{item.model}</h2>
-              <p className="lede" style={{ fontSize: '0.95rem' }}>
-                {item.blurb}
-              </p>
+              {item.blurb ? (
+                <p className="lede" style={{ fontSize: '0.95rem' }}>
+                  {item.blurb}
+                </p>
+              ) : null}
             </div>
 
             <dl className="speclist">
@@ -153,24 +155,28 @@ export default function CaseSheet({ item, onClose }: Props) {
                 <dt>Shell</dt>
                 <dd>{item.shellLabel}</dd>
               </div>
-              <div>
-                <dt>Artwork</dt>
-                <dd>{item.caption}</dd>
-              </div>
+              {item.caption ? (
+                <div>
+                  <dt>Artwork</dt>
+                  <dd>{item.caption}</dd>
+                </div>
+              ) : null}
               <div>
                 <dt>Price</dt>
                 <dd>{formatPrice()}</dd>
               </div>
             </dl>
 
-            <div style={{ display: 'grid', gap: 12 }}>
-              <p className="eyebrow">On the case</p>
-              <ul className="printed">
-                {item.printed.map((line) => (
-                  <li key={line}>{line}</li>
-                ))}
-              </ul>
-            </div>
+            {item.printed && item.printed.length > 0 ? (
+              <div style={{ display: 'grid', gap: 12 }}>
+                <p className="eyebrow">On the case</p>
+                <ul className="printed">
+                  {item.printed.map((line) => (
+                    <li key={line}>{line}</li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
 
             <a href="#contact" className="btn btn--primary" onClick={onClose}>
               Ask about this case

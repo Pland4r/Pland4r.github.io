@@ -27,6 +27,7 @@ Requires: pillow, numpy, scipy, and ffmpeg on PATH.
 
 from __future__ import annotations
 
+import json
 import math
 import os
 import subprocess
@@ -44,37 +45,133 @@ VIDEO = os.path.join(ROOT, "public", "video")
 
 FPS = 30
 
-# Source photo -> slug used everywhere else. Add a row when you add a case,
-# then mirror it in data/cases.ts.
-MAP = [
-    ("WhatsApp Image 2026-09-21 at 13.40.39.jpeg", "bmw-m4-csl"),
-    ("WhatsApp Image 2026-09-21 at 13.40.51.jpeg", "porsche-911-gt3-rs"),
-    ("WhatsApp Image 2026-09-21 at 13.40.56.jpeg", "bmw-m3-e30"),
-    ("WhatsApp Image 2026-09-21 at 13.40.59.jpeg", "porsche-911-gt2-rs"),
-    ("WhatsApp Image 2026-09-21 at 13.41.03.jpeg", "bmw-m5-f90"),
-    ("WhatsApp Image 2026-09-21 at 13.41.06.jpeg", "mercedes-amg-cls63"),
-    ("WhatsApp Image 2026-09-21 at 21.37.47.jpeg", "porsche-911-brabus"),
-    ("WhatsApp Image 2026-09-21 at 21.37.51.jpeg", "mclaren-senna"),
-    ("WhatsApp Image 2026-09-21 at 21.37.54.jpeg", "porsche-911-gt3-rs-blush"),
-    ("WhatsApp Image 2026-09-21 at 21.40.40.jpeg", "porsche-911-gt3-rs-pink"),
-]
+# Photos are discovered, not listed. Drop a file into /pic named
+#
+#     Marque - Model.jpeg              e.g.  Porsche - 911 Turbo S.jpeg
+#     Marque - Model - Variant.jpeg    e.g.  Porsche - 911 GT3 RS - Blush.jpeg
+#
+# and it becomes a product. The variant is optional and only needed to tell two
+# cases of the same model apart; it also lands on the card as the caption.
+PHOTO_TYPES = (".jpeg", ".jpg", ".png", ".webp")
 
-# Glow colour per case, sampled from its own artwork. Keep in sync with
-# the `accent` field in data/cases.ts.
-ACCENT = {
-    "bmw-m4-csl": (150, 170, 200),
-    "porsche-911-gt3-rs": (90, 160, 235),
-    "bmw-m3-e30": (60, 120, 220),
-    "porsche-911-gt2-rs": (150, 90, 230),
-    "bmw-m5-f90": (170, 175, 185),
-    "mercedes-amg-cls63": (140, 160, 190),
-    "porsche-911-brabus": (210, 140, 165),
-    "mclaren-senna": (216, 150, 172),
-    "porsche-911-gt3-rs-blush": (200, 150, 156),
-    "porsche-911-gt3-rs-pink": (255, 120, 185),
-}
+# Written by this script and read by data/cases.ts.
+GENERATED = os.path.join(ROOT, "data", "generated.json")
 
-SLUGS = [slug for _, slug in MAP]
+
+def slugify(text: str) -> str:
+    out = []
+    for ch in text.lower():
+        if ch.isalnum():
+            out.append(ch)
+        elif out and out[-1] != "-":
+            out.append("-")
+    return "".join(out).strip("-")
+
+
+def parse_name(filename: str) -> dict | None:
+    """`Marque - Model[ - Variant].ext` -> the fields we can know from a name."""
+    stem = os.path.splitext(filename)[0]
+    parts = [p.strip() for p in stem.split(" - ") if p.strip()]
+    if len(parts) < 2:
+        return None
+
+    marque, model = parts[0], parts[1]
+    variant = parts[2] if len(parts) > 2 else ""
+    slug = slugify(f"{marque} {model} {variant}".strip())
+    return {"slug": slug, "marque": marque, "model": model, "variant": variant}
+
+
+def discover() -> list[dict]:
+    """Every parseable photo in /pic, in a stable order."""
+    found, skipped = [], []
+    for name in sorted(os.listdir(SRC)):
+        if not name.lower().endswith(PHOTO_TYPES):
+            continue
+        meta = parse_name(name)
+        if meta is None:
+            skipped.append(name)
+            continue
+        meta["file"] = name
+        found.append(meta)
+
+    for name in skipped:
+        print(f"  ! skipped (needs 'Marque - Model' in the name): {name}")
+    return found
+
+
+# ------------------------------------------------------------ colour sampling
+
+def _hex(rgb) -> str:
+    return "#%02x%02x%02x" % tuple(int(max(0, min(255, v))) for v in rgb)
+
+
+def shell_of(case: Image.Image) -> tuple[str, str]:
+    """
+    The shell colour, taken as the median of the case interior.
+
+    Not the rim: these shells are glossy, so the outer edge carries a specular
+    highlight that reads as white on every case regardless of its real colour.
+    The print sits directly on the shell and its background dominates the area,
+    so the interior median lands on the shell colour instead.
+    """
+    arr = np.asarray(case).astype(np.float32)
+    inside = ndimage.binary_erosion(arr[:, :, 3] > 200, iterations=14)
+    if inside.sum() < 500:
+        inside = arr[:, :, 3] > 200
+
+    rgb = np.median(arr[:, :, :3][inside], axis=0)
+    r, g, b = rgb
+    mx, mn = float(rgb.max()), float(rgb.min())
+    light = mx / 255.0
+    sat = (mx - mn) / mx if mx else 0.0
+
+    if sat < 0.13:
+        if light > 0.72:
+            return _hex(rgb), "Gloss White"
+        if light < 0.30:
+            return _hex(rgb), "Gloss Black"
+        return _hex(rgb), "Graphite" if light < 0.55 else "Silver"
+
+    hue = float(np.degrees(np.arctan2(3 ** 0.5 * (g - b), 2 * r - g - b)) % 360)
+    names = [
+        (15, "Red"), (45, "Amber"), (70, "Gold"), (160, "Green"),
+        (200, "Teal"), (255, "Blue"), (290, "Violet"), (330, "Pink"), (360, "Red"),
+    ]
+    name = next(n for edge, n in names if hue < edge)
+
+    if light < 0.30:
+        return _hex(rgb), "Gloss Black"
+    if name in ("Red", "Pink", "Violet") and sat < 0.40:
+        name = "Dusty Pink" if light > 0.5 else "Deep Rose"
+    elif light > 0.72:
+        name = f"Light {name}"
+    elif light < 0.40:
+        name = f"Deep {name}"
+    return _hex(rgb), name
+
+
+def accent_of(case: Image.Image) -> str:
+    """
+    The strongest colour in the artwork, used for the card glow and the bloom
+    behind the case in the dark clips. Greyscale artwork falls back to a cool
+    neutral rather than inventing a hue.
+    """
+    arr = np.asarray(case).astype(np.float32)
+    inside = ndimage.binary_erosion(arr[:, :, 3] > 200, iterations=6)
+    px = arr[:, :, :3][inside] if inside.sum() > 500 else arr[:, :, :3][arr[:, :, 3] > 200]
+    if len(px) == 0:
+        return "#8aa0c0"
+
+    mx, mn = px.max(axis=1), px.min(axis=1)
+    sat = np.divide(mx - mn, np.maximum(mx, 1))
+    strong = px[(sat > 0.34) & (mx > 70)]
+    if len(strong) < max(200, len(px) * 0.004):
+        return "#8aa0c0"
+
+    rgb = np.median(strong, axis=0)
+    # Lift it so it still reads as a glow against a dark stage.
+    peak = max(rgb.max(), 1.0)
+    return _hex(rgb * (215.0 / peak))
 
 
 # --------------------------------------------------------------------- cut-out
@@ -146,30 +243,71 @@ def cutout(path: str, tol: int = 246, feather: float = 1.2) -> Image.Image:
     )
 
 
-def build_images() -> None:
+def _fresh(target: str, source: str) -> bool:
+    """True when `target` already exists and is newer than the photo."""
+    return (
+        os.path.exists(target)
+        and os.path.getmtime(target) >= os.path.getmtime(source)
+    )
+
+
+def build_images(force: bool = False) -> list[dict]:
+    """
+    Cut out every discovered photo and write data/generated.json.
+
+    Existing output newer than its photo is left alone, so re-running after
+    adding one case does not redo the others.
+    """
     os.makedirs(CASES, exist_ok=True)
     os.makedirs(PHOTO, exist_ok=True)
 
-    for filename, slug in MAP:
-        src = os.path.join(SRC, filename)
-        if not os.path.exists(src):
-            print(f"  ! missing source photo for {slug}: {filename}")
-            continue
+    entries = []
+    for meta in discover():
+        slug, src = meta["slug"], os.path.join(SRC, meta["file"])
+        png = os.path.join(CASES, f"{slug}.png")
 
-        out = cutout(src)
-        out.save(os.path.join(CASES, f"{slug}.png"), optimize=True)
-        out.save(os.path.join(CASES, f"{slug}.webp"), quality=92, method=6)
+        if force or not _fresh(png, src):
+            out = cutout(src)
+            out.save(png, optimize=True)
+            out.save(os.path.join(CASES, f"{slug}.webp"), quality=92, method=6)
+            scale = 900 / out.height
+            out.resize((int(out.width * scale), 900), Image.LANCZOS).save(
+                os.path.join(CASES, f"{slug}-md.webp"), quality=88, method=6
+            )
+            # The untouched original, shown behind the "Real photo" tab.
+            Image.open(src).convert("RGB").save(
+                os.path.join(PHOTO, f"{slug}.webp"), quality=90, method=6
+            )
+            note = "cut out"
+        else:
+            out = Image.open(png).convert("RGBA")
+            note = "up to date"
 
-        scale = 900 / out.height
-        out.resize((int(out.width * scale), 900), Image.LANCZOS).save(
-            os.path.join(CASES, f"{slug}-md.webp"), quality=88, method=6
-        )
+        swatch, shell_label = shell_of(out)
+        entries.append({
+            "slug": slug,
+            "marque": meta["marque"],
+            "model": meta["model"],
+            "variant": meta["variant"],
+            "shellLabel": shell_label,
+            "swatch": swatch,
+            "accent": accent_of(out),
+        })
+        print(f"  {slug:26s} {out.size[0]:>4}x{out.size[1]:<5} {shell_label:<12} {note}")
 
-        # The untouched original, shown behind the "Real photo" tab.
-        Image.open(src).convert("RGB").save(
-            os.path.join(PHOTO, f"{slug}.webp"), quality=90, method=6
-        )
-        print(f"  {slug:24s} {out.size[0]}x{out.size[1]}")
+    with open(GENERATED, "w", encoding="utf-8") as f:
+        json.dump(entries, f, indent=2, ensure_ascii=False)
+        f.write("\n")
+    print(f"  -> data/generated.json ({len(entries)} cases)")
+    return entries
+
+
+def catalogue() -> list[dict]:
+    """The generated entries, read back without redoing any image work."""
+    if not os.path.exists(GENERATED):
+        return build_images()
+    with open(GENERATED, encoding="utf-8") as f:
+        return json.load(f)
 
 
 # ----------------------------------------------------------------------- video
@@ -258,10 +396,10 @@ def _encode(frames, path: str, w: int, h: int, crf: int) -> None:
         raise RuntimeError(f"ffmpeg failed writing {path}")
 
 
-def product_clip(slug: str, w: int = 1000, h: int = 1000, secs: float = 6.0,
-                 dark: bool = False) -> None:
+def product_clip(slug: str, accent_hex: str, w: int = 1000, h: int = 1000,
+                 secs: float = 6.0, dark: bool = False) -> None:
     """A seamless 6s loop: slow float, soft grounding, one specular pass."""
-    accent = ACCENT[slug]
+    accent = tuple(int(accent_hex[i:i + 2], 16) for i in (1, 3, 5))
     total = int(FPS * secs)
 
     case = _load(slug, int(h * 0.78))
@@ -329,7 +467,7 @@ def hero_clip(w: int = 1280, h: int = 720, secs: float = 16.0, dark: bool = Fals
     not — this is the single biggest file a first-time visitor downloads.
     """
     total = int(FPS * secs)
-    imgs = [_load(s, int(h * 0.70)) for s in SLUGS]
+    imgs = [_load(e["slug"], int(h * 0.70)) for e in catalogue()]
     gap = 120
     cycle = sum(im.width for im in imgs) + gap * len(imgs)
 
@@ -384,12 +522,20 @@ def build_video(only: list[str] | None = None) -> None:
     rebuilt, since it is a band of every case.
     """
     os.makedirs(VIDEO, exist_ok=True)
-    slugs = [s for s in SLUGS if not only or s in only]
+    entries = [e for e in catalogue() if not only or e["slug"] in only]
+
     for dark in (False, True):
         label = "dark" if dark else "light"
-        for slug in slugs:
+        out_dir = os.path.join(VIDEO, "dark") if dark else VIDEO
+        for e in entries:
+            slug = e["slug"]
+            clip = os.path.join(out_dir, f"{slug}.mp4")
+            src = os.path.join(CASES, f"{slug}.png")
+            if not only and _fresh(clip, src):
+                print(f"  clip  {label:5s} {slug} — up to date", flush=True)
+                continue
             print(f"  clip  {label:5s} {slug}", flush=True)
-            product_clip(slug, dark=dark)
+            product_clip(slug, e["accent"], dark=dark)
         print(f"  hero  {label}", flush=True)
         hero_clip(dark=dark)
 
@@ -401,9 +547,9 @@ if __name__ == "__main__":
 
     if what in ("all", "images"):
         print("stills")
-        build_images()
+        build_images(force="--force" in sys.argv)
     if what in ("all", "video"):
         print("video")
-        build_video(only=sys.argv[2:] or None)
+        build_video(only=[a for a in sys.argv[2:] if not a.startswith("-")] or None)
 
     print("done")

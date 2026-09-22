@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: Build and deploy
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write      # the asset step commits what it generates
   pages: write
   id-token: write
 
@@ -25,8 +25,38 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version-file: .node-version
           cache: npm
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # ffmpeg encodes the product clips; the rest is Pillow/numpy/scipy.
+      - name: Install asset toolchain
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+          python -m pip install --quiet pillow numpy scipy
+
+      # Discovers every photo in pic/. Anything whose output is already newer
+      # than its photo is skipped, so a normal code push costs seconds here and
+      # only a genuinely new photo triggers a render.
+      - name: Build product assets
+        run: python -u scripts/assets.py
+
+      - name: Commit any new assets
+        run: |
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "no new assets"
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          # [skip ci] because this run already deploys what it just generated.
+          git commit -m "Build assets for new photos [skip ci]"
+          git push
 
       - name: Install
         run: npm ci

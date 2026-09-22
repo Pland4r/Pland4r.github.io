@@ -60,24 +60,52 @@ video is ever downloaded.
 
 ## Adding a new case
 
-1. Drop the photo into `pic/`.
-2. Add a row to `MAP` in `scripts/assets.py` mapping the filename to a slug,
-   and a glow colour for it in `ACCENT` just below.
-3. Add a matching entry to `cases` in `data/cases.ts`. A new shell colour also
-   needs a hex in `SWATCH` at the top of `components/CaseCard.tsx`.
-4. Build the assets:
+**Drop the photo into `pic/` and push. That is the whole job.**
 
-   ```bash
-   npm run assets:images                 # cheap, does every case
-   python scripts/assets.py video <slug> # only the new clip, plus the hero
-   ```
+Name it so the site knows what it is:
 
-   Passing slugs matters — `npm run assets:video` with no arguments re-renders
-   every clip in both themes, which takes far longer than it needs to.
+```
+Marque - Model.jpeg                  Porsche - 911 Turbo S.jpeg
+Marque - Model - Variant.jpeg        Porsche - 911 GT3 RS - Blush.jpeg
+```
 
-Copy that names the size of the collection (the hero counters, the collection
-heading, the Fit steps, the marque filters, the shell list) is all derived from
-`cases`, so none of it goes stale when you add one.
+The variant is optional — it is only needed to tell two cases of the same model
+apart, and it shows on the card as the caption until you write a better one.
+
+You can do this entirely in the browser: **github.com → `pic/` → Add file →
+Upload files → Commit**. Works from a phone. The deploy workflow then:
+
+1. discovers the photo and cuts it off its studio background
+2. writes the card still and keeps the original, untouched, for the "Real photo" tab
+3. renders the 6-second clip on both the light and dark stages
+4. reads the **shell colour** off the case interior and the **accent** off the
+   artwork, and names the shell (`Gloss Black`, `Dusty Pink`, …)
+5. writes `data/generated.json`, commits it, and deploys
+
+Roughly four minutes end to end. Anything already built is skipped, so a normal
+code push does not re-render anything.
+
+### Describing it
+
+A photo cannot say what the artwork *says*, so `blurb` and the "On the case"
+list are written by hand in `data/overrides.ts`, keyed by slug. A case with no
+entry still works — its detail sheet simply shows less. **Nothing is generated
+to fill that gap**, because an invented description is exactly the kind of thing
+a customer would find out about on delivery.
+
+Overrides can also correct a generated reading:
+
+```ts
+'bmw-m3-e30': {
+  caption: '“The Boxy”',
+  accent: '#3c78dc',   // sampler averaged the red+blue M stripe to purple
+  shellLabel: 'Blush', // if the auto name is not the one you use
+}
+```
+
+Copy that names the size of the collection — the hero counters and shell list,
+the collection heading, the Fit steps, the marque filters — is all derived from
+`cases`, so none of it goes stale.
 
 ## Regenerating the images and videos
 

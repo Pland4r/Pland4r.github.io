@@ -1,0 +1,92 @@
+[
+  {
+    "slug": "bmw-m3-e30",
+    "marque": "BMW",
+    "model": "M3 E30",
+    "variant": "",
+    "shellLabel": "Gloss Black",
+    "swatch": "#070707",
+    "accent": "#6442d7"
+  },
+  {
+    "slug": "bmw-m4-csl",
+    "marque": "BMW",
+    "model": "M4 CSL",
+    "variant": "",
+    "shellLabel": "Gloss White",
+    "swatch": "#e1e1e2",
+    "accent": "#8aa0c0"
+  },
+  {
+    "slug": "bmw-m5",
+    "marque": "BMW",
+    "model": "M5",
+    "variant": "",
+    "shellLabel": "Gloss Black",
+    "swatch": "#060606",
+    "accent": "#8aa0c0"
+  },
+  {
+    "slug": "mclaren-senna",
+    "marque": "McLaren",
+    "model": "Senna",
+    "variant": "",
+    "shellLabel": "Dusty Pink",
+    "swatch": "#b58d95",
+    "accent": "#d74270"
+  },
+  {
+    "slug": "mercedes-amg-cls-63",
+    "marque": "Mercedes-AMG",
+    "model": "CLS 63",
+    "variant": "",
+    "shellLabel": "Gloss White",
+    "swatch": "#efeff0",
+    "accent": "#8aa0c0"
+  },
+  {
+    "slug": "porsche-911-brabus",
+    "marque": "Porsche",
+    "model": "911 Brabus",
+    "variant": "",
+    "shellLabel": "Dusty Pink",
+    "swatch": "#b58d95",
+    "accent": "#d74871"
+  },
+  {
+    "slug": "porsche-911-gt2-rs",
+    "marque": "Porsche",
+    "model": "911 GT2 RS",
+    "variant": "",
+    "shellLabel": "Gloss Black",
+    "swatch": "#111012",
+    "accent": "#9668d7"
+  },
+  {
+    "slug": "porsche-911-gt3-rs-blush",
+    "marque": "Porsche",
+    "model": "911 GT3 RS",
+    "variant": "Blush",
+    "shellLabel": "Dusty Pink",
+    "swatch": "#9e8780",
+    "accent": "#d78884"
+  },
+  {
+    "slug": "porsche-911-gt3-rs-pink",
+    "marque": "Porsche",
+    "model": "911 GT3 RS",
+    "variant": "Pink",
+    "shellLabel": "Gloss Black",
+    "swatch": "#141314",
+    "accent": "#d779a7"
+  },
+  {
+    "slug": "porsche-911-gt3-rs",
+    "marque": "Porsche",
+    "model": "911 GT3 RS",
+    "variant": "",
+    "shellLabel": "Gloss White",
+    "swatch": "#e0e0e1",
+    "accent": "#56a7d7"
+  }
+]

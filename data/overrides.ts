@@ -146,6 +146,62 @@ export const overrides: Record<string, Override> = {
     ],
   },
 
+  'nissan-skyline-gt-r-r34': {
+    caption: '“Bullet”',
+    blurb:
+      'The R34 in Bayside Blue livery over black, shown in profile and from the ' +
+      'rear three-quarter, with a spec column and a long write-up on the car’s ' +
+      'screen history.',
+    printed: [
+      '“GT-R R34” · NISSAN SKYLINE · BULLET',
+      'BULLET · “GT-R R34”',
+      'Top speed 155 MPH (248 KM/H) · 2.6 inline six · 280 HP · 558-HP twin turbo',
+      'NISSAN SKYLINE · “Brian O’Conner”',
+    ],
+  },
+
+  'bmw-m3-touring': {
+    caption: '“…and that is close enough”',
+    blurb:
+      'A quote case — four lines of heavy display type over black, with the ' +
+      'Riviera Blue M3 Touring sitting underneath and the engine write-up below.',
+    printed: [
+      'BMW M3, set vertically',
+      '“Money can’t buy happiness but it can buy a BMW M3”',
+      'Blue M3 Touring, front three-quarter',
+      'M TwinPower Turbo inline 6 · 510 hp (375 kW) · 62 mph in under 3.6 s',
+    ],
+  },
+
+  'porsche-911-gt3-rs-roar': {
+    caption: '“Less Talk, More Roar.”',
+    blurb:
+      'An advert-style layout — the headline in heavy serif over black, the GT3 ' +
+      'RS in profile beneath it, and two columns of copy along the foot.',
+    printed: [
+      'PORSCHE · 911 GT3 RS, set vertically',
+      '“Less Talk, More Roar.”',
+      'Side profile, chalk grey with red wheels',
+      'The 911 GT3RS · 465 Nm · 386 kW (525 PS) · 0–62 mph in 3.2 s · 184 mph',
+    ],
+  },
+
+  'bugatti-chiron-pur-sport': {
+    caption: '“Chiron Pur Sport”',
+    // The sampler reads the interior, and the huge dark BUGATTI lettering fills
+    // most of it — so a white case measures as graphite.
+    shellLabel: 'Gloss White',
+    blurb:
+      'BUGATTI in enormous gradient type running off both edges, with the green ' +
+      'Chiron Pur Sport cutting across it and a spec strip along the foot.',
+    printed: [
+      'BUGATTI in oversized gradient type',
+      'Chiron Pur Sport in green and black',
+      'CHIRON PUR SPORT · French tricolore',
+      '1500 HP · 8.0 L W16 · 350 km/h · 0–100 in 2.3 s · 1600 Nm · 1945 KG',
+    ],
+  },
+
   'porsche-911-gt3-rs-pink': {
     caption: '“Pink”',
     blurb:

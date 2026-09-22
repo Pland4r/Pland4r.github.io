@@ -11,6 +11,17 @@
     "accent": "#6442d7"
   },
   {
+    "slug": "bmw-m3-touring",
+    "file": "BMW - M3 Touring.jpeg",
+    "named": true,
+    "marque": "BMW",
+    "model": "M3 Touring",
+    "variant": "",
+    "shellLabel": "Gloss Black",
+    "swatch": "#1b1d1d",
+    "accent": "#38c1d7"
+  },
+  {
     "slug": "bmw-m4-csl",
     "file": "BMW - M4 CSL.jpeg",
     "named": true,
@@ -33,6 +44,17 @@
     "accent": "#8aa0c0"
   },
   {
+    "slug": "bugatti-chiron-pur-sport",
+    "file": "Bugatti - Chiron Pur Sport.jpeg",
+    "named": true,
+    "marque": "Bugatti",
+    "model": "Chiron Pur Sport",
+    "variant": "",
+    "shellLabel": "Graphite",
+    "swatch": "#676e72",
+    "accent": "#77d7b9"
+  },
+  {
     "slug": "mclaren-senna",
     "file": "McLaren - Senna.jpeg",
     "named": true,
@@ -53,6 +75,17 @@
     "shellLabel": "Gloss White",
     "swatch": "#efeff0",
     "accent": "#8aa0c0"
+  },
+  {
+    "slug": "nissan-skyline-gt-r-r34",
+    "file": "Nissan - Skyline GT-R R34.jpeg",
+    "named": true,
+    "marque": "Nissan",
+    "model": "Skyline GT-R R34",
+    "variant": "",
+    "shellLabel": "Gloss Black",
+    "swatch": "#030303",
+    "accent": "#5a7ed7"
   },
   {
     "slug": "porsche-911-brabus",
@@ -97,6 +130,17 @@
     "shellLabel": "Gloss Black",
     "swatch": "#141314",
     "accent": "#d779a7"
+  },
+  {
+    "slug": "porsche-911-gt3-rs-roar",
+    "file": "Porsche - 911 GT3 RS - Roar.jpeg",
+    "named": true,
+    "marque": "Porsche",
+    "model": "911 GT3 RS",
+    "variant": "Roar",
+    "shellLabel": "Gloss Black",
+    "swatch": "#151414",
+    "accent": "#d74f51"
   },
   {
     "slug": "porsche-911-gt3-rs",

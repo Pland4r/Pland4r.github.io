@@ -1,0 +1,9 @@
+{
+  "//": "Names photos whose filename does not already say which car they are.",
+  "//key": "The photo's filename exactly as it appears in /pic, including the extension.",
+  "//value": "Marque - Model      or      Marque - Model - Variant",
+  "//variant": "Variant is only needed to tell two cases of the same model apart.",
+  "//example": "\"WhatsApp Image 2026-09-22 at 14.22.11.jpeg\": \"Porsche - 911 Turbo S\"",
+  "//note": "A photo already named 'Marque - Model.jpeg' needs no entry here.",
+  "//fixing": "An entry also overrides a filename, so a wrong name is fixable without renaming the file."
+}

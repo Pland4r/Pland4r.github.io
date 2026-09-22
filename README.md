@@ -60,38 +60,56 @@ video is ever downloaded.
 
 ## Adding a new case
 
-**Drop the photo into `pic/` and push. That is the whole job.**
+**Drop the photo into `pic/` and push. Any filename works.**
 
-Name it so the site knows what it is:
+In the browser: **github.com → `pic/` → Add file → Upload files → Commit**. Works
+from a phone. The deploy workflow then cuts the case off its studio background,
+writes the card still, keeps the original untouched for the "Real photo" tab,
+renders the 6-second clip on both the light and dark stages, reads the **shell
+colour** off the case interior and the **accent** off the artwork, and deploys.
+
+### Telling it which car it is
+
+A photo cannot say which car it is, and guessing is not acceptable on a live
+shop — so a photo with no name is fully rendered but **held back from the site**
+rather than shown under a wrong model.
+
+Two ways to name one:
 
 ```
-Marque - Model.jpeg                  Porsche - 911 Turbo S.jpeg
-Marque - Model - Variant.jpeg        Porsche - 911 GT3 RS - Blush.jpeg
+pic/Porsche - 911 Turbo S.jpeg          name the file, no other step
+```
+```jsonc
+// data/names.json — or name it later, without renaming anything
+{ "WhatsApp Image 2026-09-22 at 14.22.11.jpeg": "Porsche - 911 Turbo S" }
 ```
 
-The variant is optional — it is only needed to tell two cases of the same model
-apart, and it shows on the card as the caption until you write a better one.
+Add a third part — `Porsche - 911 GT3 RS - Blush` — only to tell two cases of
+the same model apart. It shows on the card until you write a caption.
 
-You can do this entirely in the browser: **github.com → `pic/` → Add file →
-Upload files → Commit**. Works from a phone. The deploy workflow then:
+Every build prints what is waiting, and puts it on the Actions run summary
+ready to paste:
 
-1. discovers the photo and cuts it off its studio background
-2. writes the card still and keeps the original, untouched, for the "Real photo" tab
-3. renders the 6-second clip on both the light and dark stages
-4. reads the **shell colour** off the case interior and the **accent** off the
-   artwork, and names the shell (`Gloss Black`, `Dusty Pink`, …)
-5. writes `data/generated.json`, commits it, and deploys
+```
+1 case(s) ready but held back — they need a name.
+Add to data/names.json:
 
-Roughly four minutes end to end. Anything already built is skipped, so a normal
-code push does not re-render anything.
+    "WhatsApp Image 2026-09-22 at 14.22.11.jpeg": "Marque - Model",
+```
+
+Naming a case does not re-render anything — the slug comes from the filename,
+not the car name, so the clips already built stay valid and it goes live on the
+next deploy.
+
+A `names.json` entry also *overrides* a filename, so a wrong name is fixable
+without touching the photo.
 
 ### Describing it
 
-A photo cannot say what the artwork *says*, so `blurb` and the "On the case"
-list are written by hand in `data/overrides.ts`, keyed by slug. A case with no
-entry still works — its detail sheet simply shows less. **Nothing is generated
-to fill that gap**, because an invented description is exactly the kind of thing
-a customer would find out about on delivery.
+`blurb` and the "On the case" list are hand-written in `data/overrides.ts`,
+keyed by slug. A case works fine without one — its detail sheet just shows less.
+**Nothing is generated to fill that gap**, because an invented product
+description is what a customer finds out about on delivery.
 
 Overrides can also correct a generated reading:
 
@@ -102,6 +120,11 @@ Overrides can also correct a generated reading:
   shellLabel: 'Blush', // if the auto name is not the one you use
 }
 ```
+
+### Removing one
+
+Delete the photo from `pic/`. The next build prunes its generated assets and
+drops it from the collection.
 
 Copy that names the size of the collection — the hero counters and shell list,
 the collection heading, the Fit steps, the marque filters — is all derived from

@@ -1,6 +1,8 @@
 [
   {
     "slug": "bmw-m3-e30",
+    "file": "BMW - M3 E30.jpeg",
+    "named": true,
     "marque": "BMW",
     "model": "M3 E30",
     "variant": "",
@@ -10,6 +12,8 @@
   },
   {
     "slug": "bmw-m4-csl",
+    "file": "BMW - M4 CSL.jpeg",
+    "named": true,
     "marque": "BMW",
     "model": "M4 CSL",
     "variant": "",
@@ -19,6 +23,8 @@
   },
   {
     "slug": "bmw-m5",
+    "file": "BMW - M5.jpeg",
+    "named": true,
     "marque": "BMW",
     "model": "M5",
     "variant": "",
@@ -28,6 +34,8 @@
   },
   {
     "slug": "mclaren-senna",
+    "file": "McLaren - Senna.jpeg",
+    "named": true,
     "marque": "McLaren",
     "model": "Senna",
     "variant": "",
@@ -37,6 +45,8 @@
   },
   {
     "slug": "mercedes-amg-cls-63",
+    "file": "Mercedes-AMG - CLS 63.jpeg",
+    "named": true,
     "marque": "Mercedes-AMG",
     "model": "CLS 63",
     "variant": "",
@@ -46,6 +56,8 @@
   },
   {
     "slug": "porsche-911-brabus",
+    "file": "Porsche - 911 Brabus.jpeg",
+    "named": true,
     "marque": "Porsche",
     "model": "911 Brabus",
     "variant": "",
@@ -55,6 +67,8 @@
   },
   {
     "slug": "porsche-911-gt2-rs",
+    "file": "Porsche - 911 GT2 RS.jpeg",
+    "named": true,
     "marque": "Porsche",
     "model": "911 GT2 RS",
     "variant": "",
@@ -64,6 +78,8 @@
   },
   {
     "slug": "porsche-911-gt3-rs-blush",
+    "file": "Porsche - 911 GT3 RS - Blush.jpeg",
+    "named": true,
     "marque": "Porsche",
     "model": "911 GT3 RS",
     "variant": "Blush",
@@ -73,6 +89,8 @@
   },
   {
     "slug": "porsche-911-gt3-rs-pink",
+    "file": "Porsche - 911 GT3 RS - Pink.jpeg",
+    "named": true,
     "marque": "Porsche",
     "model": "911 GT3 RS",
     "variant": "Pink",
@@ -82,6 +100,8 @@
   },
   {
     "slug": "porsche-911-gt3-rs",
+    "file": "Porsche - 911 GT3 RS.jpeg",
+    "named": true,
     "marque": "Porsche",
     "model": "911 GT3 RS",
     "variant": "",

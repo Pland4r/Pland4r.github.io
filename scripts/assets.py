@@ -45,17 +45,21 @@ VIDEO = os.path.join(ROOT, "public", "video")
 
 FPS = 30
 
-# Photos are discovered, not listed. Drop a file into /pic named
+# Photos are discovered, not listed — drop any image into /pic and it is picked
+# up. The filename only decides the slug, which is internal; nothing about it
+# reaches a visitor.
 #
-#     Marque - Model.jpeg              e.g.  Porsche - 911 Turbo S.jpeg
-#     Marque - Model - Variant.jpeg    e.g.  Porsche - 911 GT3 RS - Blush.jpeg
+# What a photo cannot tell us is which car it is. Two ways to say so:
 #
-# and it becomes a product. The variant is optional and only needed to tell two
-# cases of the same model apart; it also lands on the card as the caption.
+#   1. name the file      Porsche - 911 Turbo S.jpeg
+#   2. or name it later   data/names.json  ->  "<filename>": "Porsche - 911 Turbo S"
+#
+# Until one of those exists the case is still cut out and rendered in full, but
+# it is held back from the site rather than shown under a guessed name.
 PHOTO_TYPES = (".jpeg", ".jpg", ".png", ".webp")
 
-# Written by this script and read by data/cases.ts.
 GENERATED = os.path.join(ROOT, "data", "generated.json")
+NAMES = os.path.join(ROOT, "data", "names.json")
 
 
 def slugify(text: str) -> str:
@@ -68,35 +72,86 @@ def slugify(text: str) -> str:
     return "".join(out).strip("-")
 
 
-def parse_name(filename: str) -> dict | None:
-    """`Marque - Model[ - Variant].ext` -> the fields we can know from a name."""
-    stem = os.path.splitext(filename)[0]
-    parts = [p.strip() for p in stem.split(" - ") if p.strip()]
+def _load_names() -> dict[str, str]:
+    if not os.path.exists(NAMES):
+        return {}
+    with open(NAMES, encoding="utf-8") as f:
+        raw = json.load(f)
+    # Keys starting with // are notes to the reader, not photos.
+    return {k: v for k, v in raw.items() if not k.startswith("//")}
+
+
+def parse_name(text: str) -> dict | None:
+    """`Marque - Model[ - Variant]` -> its parts, or None if it is not that."""
+    parts = [p.strip() for p in text.split(" - ") if p.strip()]
     if len(parts) < 2:
         return None
-
-    marque, model = parts[0], parts[1]
-    variant = parts[2] if len(parts) > 2 else ""
-    slug = slugify(f"{marque} {model} {variant}".strip())
-    return {"slug": slug, "marque": marque, "model": model, "variant": variant}
+    return {
+        "marque": parts[0],
+        "model": parts[1],
+        "variant": parts[2] if len(parts) > 2 else "",
+    }
 
 
 def discover() -> list[dict]:
-    """Every parseable photo in /pic, in a stable order."""
-    found, skipped = [], []
-    for name in sorted(os.listdir(SRC)):
-        if not name.lower().endswith(PHOTO_TYPES):
-            continue
-        meta = parse_name(name)
-        if meta is None:
-            skipped.append(name)
-            continue
-        meta["file"] = name
-        found.append(meta)
+    """
+    Every image in /pic, named or not.
 
-    for name in skipped:
-        print(f"  ! skipped (needs 'Marque - Model' in the name): {name}")
+    The slug always comes from the filename, never from the car name, so giving
+    a case its name later does not change the slug — and therefore does not
+    orphan the clips already rendered for it.
+    """
+    names = _load_names()
+    found = []
+
+    for filename in sorted(os.listdir(SRC)):
+        if not filename.lower().endswith(PHOTO_TYPES):
+            continue
+        stem = os.path.splitext(filename)[0]
+
+        # An explicit entry wins over the filename, so a bad name is fixable
+        # without renaming the file and re-rendering everything.
+        parsed = parse_name(names.get(filename) or names.get(stem) or "") or parse_name(stem)
+
+        found.append({
+            "slug": slugify(stem),
+            "file": filename,
+            "named": parsed is not None,
+            "marque": (parsed or {}).get("marque", ""),
+            "model": (parsed or {}).get("model", ""),
+            "variant": (parsed or {}).get("variant", ""),
+        })
+
     return found
+
+
+def report_unnamed(entries: list[dict]) -> None:
+    """Say loudly which photos are waiting on a name, in the log and on the run."""
+    waiting = [e for e in entries if not e["named"]]
+    if not waiting:
+        return
+
+    lines = [
+        "",
+        f"  {len(waiting)} case(s) ready but held back — they need a name.",
+        "  Add to data/names.json:",
+        "",
+    ]
+    for e in waiting:
+        lines.append(f'      "{e["file"]}": "Marque - Model",')
+    lines.append("")
+    print(chr(10).join(lines), flush=True)
+
+    summary = os.environ.get("GITHUB_STEP_SUMMARY")
+    if not summary:
+        return
+    with open(summary, "a", encoding="utf-8") as f:
+        f.write(f"### {len(waiting)} case(s) need a name" + chr(10) * 2)
+        f.write("Everything is rendered and ready. Add these to `data/names.json`:" + chr(10) * 2)
+        f.write("```json" + chr(10))
+        for e in waiting:
+            f.write(f'  "{e["file"]}": "Marque - Model",' + chr(10))
+        f.write("```" + chr(10))
 
 
 # ------------------------------------------------------------ colour sampling
@@ -286,6 +341,8 @@ def build_images(force: bool = False) -> list[dict]:
         swatch, shell_label = shell_of(out)
         entries.append({
             "slug": slug,
+            "file": meta["file"],
+            "named": meta["named"],
             "marque": meta["marque"],
             "model": meta["model"],
             "variant": meta["variant"],
@@ -293,13 +350,53 @@ def build_images(force: bool = False) -> list[dict]:
             "swatch": swatch,
             "accent": accent_of(out),
         })
-        print(f"  {slug:26s} {out.size[0]:>4}x{out.size[1]:<5} {shell_label:<12} {note}")
+        flag = "" if meta["named"] else "  NEEDS A NAME"
+        print(f"  {slug:26s} {out.size[0]:>4}x{out.size[1]:<5} {shell_label:<12} {note}{flag}")
 
     with open(GENERATED, "w", encoding="utf-8") as f:
         json.dump(entries, f, indent=2, ensure_ascii=False)
         f.write("\n")
-    print(f"  -> data/generated.json ({len(entries)} cases)")
+    prune({e["slug"] for e in entries})
+
+    named = sum(1 for e in entries if e["named"])
+    print(f"  -> data/generated.json ({named} live, {len(entries) - named} awaiting a name)")
+    report_unnamed(entries)
     return entries
+
+
+def prune(keep: set[str]) -> None:
+    """
+    Delete assets whose photo is gone, so removing or replacing a photo does not
+    leave the repo carrying files nothing references.
+
+    Only ever touches generated output, and only for slugs no longer present.
+    """
+    targets = [
+        (CASES, ("{s}.png", "{s}.webp", "{s}-md.webp")),
+        (PHOTO, ("{s}.webp",)),
+        (VIDEO, ("{s}.mp4", "{s}-poster.webp")),
+        (os.path.join(VIDEO, "dark"), ("{s}.mp4", "{s}-poster.webp")),
+    ]
+    known = {p.format(s=slug) for _, pats in targets for pat in pats for slug in keep
+             for p in [pat]}
+
+    removed = 0
+    for folder, patterns in targets:
+        if not os.path.isdir(folder):
+            continue
+        wanted = {pat.format(s=slug) for pat in patterns for slug in keep}
+        for name in os.listdir(folder):
+            path = os.path.join(folder, name)
+            if not os.path.isfile(path) or name in wanted:
+                continue
+            # Leave anything that is not shaped like our output alone.
+            if name.startswith("hero") or not name.endswith((".png", ".webp", ".mp4")):
+                continue
+            os.remove(path)
+            removed += 1
+
+    if removed:
+        print(f"  pruned {removed} orphaned asset(s)")
 
 
 def catalogue() -> list[dict]:

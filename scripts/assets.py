@@ -527,6 +527,7 @@ def build_video(only: list[str] | None = None) -> None:
     for dark in (False, True):
         label = "dark" if dark else "light"
         out_dir = os.path.join(VIDEO, "dark") if dark else VIDEO
+        rendered = 0
         for e in entries:
             slug = e["slug"]
             clip = os.path.join(out_dir, f"{slug}.mp4")
@@ -536,6 +537,20 @@ def build_video(only: list[str] | None = None) -> None:
                 continue
             print(f"  clip  {label:5s} {slug}", flush=True)
             product_clip(slug, e["accent"], dark=dark)
+            rendered += 1
+
+        # The hero is a band of every case, so it only needs rebuilding when the
+        # set changed. Without this a code-only push pays three minutes to
+        # re-render a video identical to the one already published.
+        hero = os.path.join(out_dir, "hero.mp4")
+        newest = max(
+            (os.path.getmtime(os.path.join(CASES, f"{e['slug']}.png")) for e in entries),
+            default=0,
+        )
+        if not rendered and os.path.exists(hero) and os.path.getmtime(hero) >= newest:
+            print(f"  hero  {label} — up to date", flush=True)
+            continue
+
         print(f"  hero  {label}", flush=True)
         hero_clip(dark=dark)
 

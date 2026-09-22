@@ -1,0 +1,11 @@
+{
+  // Only used if the site is deployed through Workers rather than Pages.
+  // Harmless otherwise — the Pages flow ignores this file.
+  "name": "ma-cases",
+  "compatibility_date": "2026-09-22",
+  // Next's static export lands in ./out; Workers serves it as static assets,
+  // so there is no server code and nothing to run per request.
+  "assets": {
+    "directory": "./out"
+  }
+}

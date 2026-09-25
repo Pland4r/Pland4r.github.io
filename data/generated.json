@@ -18,7 +18,7 @@
     "model": "M3 Touring",
     "variant": "",
     "shellLabel": "Gloss Black",
-    "swatch": "#1b1d1d",
+    "swatch": "#1b1c1c",
     "accent": "#38c1d7"
   },
   {
@@ -29,7 +29,7 @@
     "model": "M4 CSL",
     "variant": "",
     "shellLabel": "Gloss White",
-    "swatch": "#e1e1e2",
+    "swatch": "#e0e1e2",
     "accent": "#8aa0c0"
   },
   {
@@ -40,7 +40,7 @@
     "model": "M5",
     "variant": "",
     "shellLabel": "Gloss Black",
-    "swatch": "#060606",
+    "swatch": "#060707",
     "accent": "#8aa0c0"
   },
   {
@@ -51,7 +51,7 @@
     "model": "Chiron Pur Sport",
     "variant": "",
     "shellLabel": "Gloss White",
-    "swatch": "#f4f4f5",
+    "swatch": "#f3f3f5",
     "accent": "#7dd7c0"
   },
   {
@@ -62,7 +62,7 @@
     "model": "Senna",
     "variant": "",
     "shellLabel": "Dusty Pink",
-    "swatch": "#b58d95",
+    "swatch": "#b58d94",
     "accent": "#d74270"
   },
   {
@@ -139,7 +139,7 @@
     "model": "911 GT3 RS",
     "variant": "Roar",
     "shellLabel": "Gloss Black",
-    "swatch": "#151414",
+    "swatch": "#141413",
     "accent": "#d74f51"
   },
   {

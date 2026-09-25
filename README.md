@@ -157,17 +157,23 @@ python -m pip install pillow numpy scipy
 | `public/video/hero.mp4` | the show-reel band loop + poster |
 | `public/video/dark/…` | the same clips rendered on a dark stage |
 
-The background threshold is read from each photo's own backdrop rather than
-fixed, because a case rim can sit only a few levels below the paper it is shot
-on and a fixed cut lands inside that margin.
+The background is removed by flooding inwards from the edge of the frame, but
+the flood may only travel through **paper** — pixels that are both bright and
+*flat*.
 
-**Shoot on anything but white.** A white case on a white backdrop can have a rim
-whose contrast falls inside JPEG noise — the Chiron's right edge reads 235-247
-against a 253-255 background — and no threshold separates that reliably. When a
-cut-out comes out hollow the photo is kept whole on a rounded plate instead: a
-silhouette guessed from an edge nobody can see comes out torn, and a clean plate
-beats a ragged cut-out. Any non-white surface, even a grey sheet, cuts out
-perfectly. **The printed artwork is never edited, recoloured or retouched** — the videos are the real photo lit on a
+Brightness alone is not enough. A white case photographed on a white backdrop
+can have a rim only two or three levels below the paper, which is inside JPEG
+noise: a brightness threshold flickers on and off row to row, the flood pours
+through the gaps and hollows the shell out, leaving an outline around a
+transparent case. That same rim still spikes the local gradient, so requiring
+flatness blocks it. The image is blurred before the gradient is measured,
+because JPEG noise alone produces a gradient of about one level.
+
+The threshold is also read from each photo's own backdrop rather than fixed,
+and only the largest region is kept so a speck of sensor noise out in the paper
+cannot drag the crop out to meet it.
+
+**The printed artwork is never edited, recoloured or retouched** — the videos are the real photo lit on a
 studio background, and the “Real photo” tab on every product shows the untouched
 original so a customer can always check.
 

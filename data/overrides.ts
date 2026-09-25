@@ -188,9 +188,6 @@ export const overrides: Record<string, Override> = {
 
   'bugatti-chiron-pur-sport': {
     caption: '“Chiron Pur Sport”',
-    // The sampler reads the interior, and the huge dark BUGATTI lettering fills
-    // most of it — so a white case measures as graphite.
-    shellLabel: 'Gloss White',
     blurb:
       'BUGATTI in enormous gradient type running off both edges, with the green ' +
       'Chiron Pur Sport cutting across it and a spec strip along the foot.',
@@ -198,7 +195,7 @@ export const overrides: Record<string, Override> = {
       'BUGATTI in oversized gradient type',
       'Chiron Pur Sport in green and black',
       'CHIRON PUR SPORT · French tricolore',
-      '1500 HP · 8.0 L W16 · 350 km/h · 0–100 in 2.3 s · 1600 Nm · 1945 KG',
+      '1500 HP · 8.0 L W16 · 420 km/h · 0–100 in 2.3 s · 1600 Nm · 1985 KG',
     ],
   },
 

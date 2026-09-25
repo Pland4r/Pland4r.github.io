@@ -104,6 +104,28 @@ next deploy.
 A `names.json` entry also *overrides* a filename, so a wrong name is fixable
 without touching the photo.
 
+### When the cut-out will not come out clean
+
+Some photos will not cut cleanly no matter what — a white case shot on white
+paper with the rim inside JPEG noise is the hard case, and the rescue above
+exists for it. If you can get hold of a version of the picture that already has
+its background off, drop it into **`pic/clean/` under the same name as the
+photo**:
+
+```
+pic/Bugatti - Chiron Pur Sport.jpeg          the photo, as always
+pic/clean/Bugatti - Chiron Pur Sport.png     already cut out
+```
+
+The pipeline then uses that picture's own alpha instead of cutting one, and
+says `own alpha` in the build log. It stretches the alpha first — a supplied
+cut-out usually has a soft drop shadow baked in and a body a level or two short
+of solid, and the stage lays its own shadow down anyway.
+
+**The photo in `pic/` stays where it is and still feeds the “Real photo” tab.**
+That is the point: the card, the 3D view and the clip get the clean edge, and a
+customer can still see the original picture of the case.
+
 ### Describing it
 
 `blurb` and the "On the case" list are hand-written in `data/overrides.ts`,
@@ -157,11 +179,53 @@ python -m pip install pillow numpy scipy
 | `public/video/hero.mp4` | the show-reel band loop + poster |
 | `public/video/dark/…` | the same clips rendered on a dark stage |
 
-The cut-out only removes background that is connected to the edge of the frame,
-which is why the white cases survive it intact. **The printed artwork is never
-edited, recoloured or retouched** — the videos are the real photo lit on a
-studio background, and the “Real photo” tab on every product shows the untouched
-original so a customer can always check.
+The background is removed by flooding white inwards from the edge of the frame.
+Only white *connected to the border* goes, which is what keeps the white cases
+intact — their shells are enclosed by the case outline, so the flood can never
+reach them. That handles thirteen of the fourteen photos, and it is left exactly
+as it is, because it is the one that gets the edges right.
+
+**The rescue.** One photo it does not handle. A white case shot on white paper
+can have a rim only two or three levels below the backdrop, which is inside JPEG
+noise: the threshold flickers on and off row to row, the flood pours through the
+gaps and hollows the shell out, leaving an outline around a transparent case.
+So the result is measured — a phone case fills 92–95% of its own bounding box,
+and far less means the flood got inside it — and only a photo that fails that
+check is re-cut.
+
+The re-cut floods the same way, but the flood may only travel through pixels
+that are both bright *and flat*. The rim that brightness cannot see still spikes
+the local gradient, so demanding flatness walls the flood out of it. The image
+is blurred before the gradient is measured, because JPEG noise on its own
+produces a gradient of about one level.
+
+That gradient wall says which side of the case you are on, not exactly where the
+edge is: it stalls somewhere inside the rim, and a pixel or two further in on
+the next row, which reads as a torn white border down the flank and a square-cut
+bottom where the case is round. So the four boundary curves are snapped back
+onto the rim — the only thing separating a white case wall from white paper is
+that thin dark line — and run through a short median: long enough to lose the
+jitter, short enough to keep the volume buttons.
+
+Rows and columns are two directions, though, and a median lands on whole pixels,
+so that still leaves a one-pixel staircase down the flanks and a flat facet
+where the two meet at a corner. Both go the same way: the silhouette is blurred
+and re-cut at half coverage — the usual stand-in for curvature flow. It is the
+same in every direction, so it cannot favour rows over columns, and it rubs out
+detail finer than itself while leaving the buttons alone.
+
+What comes back is a mask, like the plain flood's, so it takes the same feather
+afterwards. That matters for how it looks next to the others: measured across
+the middle half of each case, the rescued edge fades over 1.03px and the plain
+flood's over 1.03–1.06px, so no case reads softer than its neighbours on a card.
+
+Throughout, the threshold is read from each photo's own backdrop rather than
+fixed, and only the largest region is kept so a speck of sensor noise out in the
+paper cannot drag the crop out to meet it.
+
+**The printed artwork is never edited, recoloured or retouched** — the videos
+are the real photo lit on a studio background, and the “Real photo” tab on every
+product shows the untouched original so a customer can always check.
 
 ### About the 3D view
 

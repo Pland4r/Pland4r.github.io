@@ -44,6 +44,17 @@
     "accent": "#8aa0c0"
   },
   {
+    "slug": "bugatti-chiron-pur-sport",
+    "file": "Bugatti - Chiron Pur Sport.jpeg",
+    "named": true,
+    "marque": "Bugatti",
+    "model": "Chiron Pur Sport",
+    "variant": "",
+    "shellLabel": "Gloss White",
+    "swatch": "#e7e8e9",
+    "accent": "#a6d7a9"
+  },
+  {
     "slug": "mclaren-senna",
     "file": "McLaren - Senna.jpeg",
     "named": true,

@@ -15,6 +15,10 @@ Turns the raw product photos in /pic into everything the site serves:
 The cut-out only ever removes the studio background — the printed artwork is
 never touched, resized against its shell, or recoloured.
 
+A photo that came with its background already off can be dropped into
+/pic/clean under the same name; its own alpha is then used instead of cutting,
+and /pic still supplies the untouched original for the "Real photo" tab.
+
 Usage
     python scripts/assets.py            # everything
     python scripts/assets.py images     # stills only (fast)
@@ -39,6 +43,7 @@ from scipy import ndimage
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, "pic")
+CLEAN = os.path.join(SRC, "clean")
 CASES = os.path.join(ROOT, "public", "cases")
 PHOTO = os.path.join(CASES, "photo")
 VIDEO = os.path.join(ROOT, "public", "video")
@@ -93,6 +98,21 @@ def parse_name(text: str) -> dict | None:
     }
 
 
+def _clean_for(stem: str) -> str | None:
+    """
+    A ready-cut version of this photo in /pic/clean, if one was dropped there.
+
+    Same name as the photo, any image extension. The photo itself stays where
+    it is and still feeds the "Real photo" tab, so supplying one of these
+    changes how the case is cut out and nothing else.
+    """
+    for ext in PHOTO_TYPES:
+        candidate = os.path.join(CLEAN, stem + ext)
+        if os.path.exists(candidate):
+            return candidate
+    return None
+
+
 def discover() -> list[dict]:
     """
     Every image in /pic, named or not.
@@ -116,6 +136,7 @@ def discover() -> list[dict]:
         found.append({
             "slug": slugify(stem),
             "file": filename,
+            "clean": _clean_for(stem),
             "named": parsed is not None,
             "marque": (parsed or {}).get("marque", ""),
             "model": (parsed or {}).get("model", ""),
@@ -249,6 +270,165 @@ def _trim_black_bars(a: np.ndarray) -> tuple[int, int, int, int]:
     return top, bottom + 1, left, right + 1
 
 
+def _settle_flanks(solid: np.ndarray, darkest: np.ndarray, backdrop: float,
+                   reach: int = 10, window: int = 15,
+                   round_off: float = 3.0) -> np.ndarray:
+    """
+    Put the boundary back on the rim, and take the wobble out of it.
+
+    The gradient gate says which side of the case you are on, not exactly where
+    the edge is: it stalls somewhere inside the few pixels of the rim, and a
+    pixel or two further in on the next row. Left alone that reads as a torn
+    white border down the flank and a square-cut bottom where the case is
+    actually round.
+
+    So each of the four boundary curves is snapped onto the rim — the only thing
+    that separates a white case wall from white paper is that thin dark line —
+    and then run through a median, which is short enough to keep the volume
+    buttons and long enough to lose the jitter. The silhouette is rebuilt as the
+    rows and the columns agreeing, which is exact for a rounded rectangle.
+
+    Rows and columns are still two directions, though, and a median still lands
+    on whole pixels, so what comes out has a one-pixel staircase down the flanks
+    and a flat facet where the two meet at a corner. Both go the same way: blur
+    the silhouette and re-cut it at half coverage, which is the usual stand-in
+    for curvature flow — it is the same in every direction, so it cannot favour
+    rows over columns, and it rubs out detail finer than itself while leaving
+    the buttons alone.
+
+    What comes back is a mask, like the plain flood's, so it takes the same
+    feather afterwards and the edge ends up the same width as every other case.
+    """
+    ink = darkest < backdrop - 4
+
+    def curves(mask):
+        present = mask.any(axis=1)
+        first = np.where(present, np.argmax(mask, axis=1), np.nan).astype(float)
+        last = np.where(
+            present, mask.shape[1] - 1 - np.argmax(mask[:, ::-1], axis=1), np.nan
+        ).astype(float)
+        return first, last
+
+    def snap(first, last, rim):
+        width = rim.shape[1]
+        for y in range(rim.shape[0]):
+            if np.isnan(first[y]):
+                continue
+            for curve, outer in ((first, False), (last, True)):
+                at = int(curve[y])
+                lo, hi = max(0, at - reach), min(width, at + reach + 1)
+                near = np.nonzero(rim[y, lo:hi])[0]
+                if len(near):
+                    curve[y] = lo + (near[-1] if outer else near[0])
+        return first, last
+
+    def smooth(curve):
+        known = ~np.isnan(curve)
+        if known.sum() > window:
+            curve[known] = ndimage.median_filter(
+                curve[known], size=window, mode="nearest"
+            )
+        return curve
+
+    left, right = snap(*curves(solid), ink)
+    top, bottom = snap(*curves(solid.T), ink.T)
+    left, right, top, bottom = (smooth(c) for c in (left, right, top, bottom))
+
+    h, w = solid.shape
+    xs = np.arange(w)[None, :]
+    ys = np.arange(h)[:, None]
+    rows = (xs >= np.nan_to_num(left, nan=w)[:, None]) & (
+        xs <= np.nan_to_num(right, nan=-1)[:, None]
+    )
+    cols = (ys >= np.nan_to_num(top, nan=h)[None, :]) & (
+        ys <= np.nan_to_num(bottom, nan=-1)[None, :]
+    )
+
+    blurred = ndimage.gaussian_filter((rows & cols).astype(np.float32), round_off)
+    return blurred > 0.5
+
+
+def _gated_silhouette(a: np.ndarray, blur: float = 1.2, gradient: float = 1.2,
+                      margin: int = 4, trim: int = 1) -> np.ndarray:
+    """
+    A rescue for photos the plain flood hollows out.
+
+    A white case on a white backdrop can have a rim only two or three levels
+    below the paper — inside JPEG noise — so the brightness flood leaks through
+    and eats the shell. That rim still spikes the local gradient, so the flood
+    is additionally barred from any pixel that is not flat. The gradient wall
+    stands slightly off the true edge, so the result is trimmed back with
+    brightness and then settled onto the rim: the gate supplies the
+    connectivity, the rim supplies the boundary.
+
+    Only used when the plain flood fails, because the gate costs a little edge
+    accuracy and thirteen of fourteen cases do not need it.
+    """
+    darkest = a.min(axis=2).astype(float)
+    border = np.concatenate(
+        [darkest[0, :], darkest[-1, :], darkest[:, 0], darkest[:, -1]]
+    )
+    backdrop = float(np.median(border))
+
+    smoothed = ndimage.gaussian_filter(darkest, blur)
+    slope = np.hypot(ndimage.sobel(smoothed, 0), ndimage.sobel(smoothed, 1))
+
+    labels, _ = ndimage.label((darkest >= backdrop - margin) & (slope < gradient))
+    edge = set(labels[0, :]) | set(labels[-1, :]) | set(labels[:, 0]) | set(labels[:, -1])
+    edge.discard(0)
+    gated = ndimage.binary_fill_holes(~np.isin(labels, list(edge)))
+
+    solid = ndimage.binary_fill_holes(gated & (darkest < backdrop - trim))
+    parts, n = ndimage.label(solid)
+    if n > 1:
+        sizes = ndimage.sum(np.ones_like(parts), parts, range(1, n + 1))
+        solid = parts == (1 + int(np.argmax(sizes)))
+    return _settle_flanks(solid, darkest, backdrop)
+
+
+def _fill_ratio(alpha: np.ndarray) -> float:
+    """How much of its own bounding box the silhouette occupies."""
+    mask = alpha > 128
+    ys, xs = np.where(mask)
+    if len(ys) == 0:
+        return 0.0
+    return mask[ys.min():ys.max() + 1, xs.min():xs.max() + 1].mean()
+
+
+# A phone case fills 92-95% of its bounding box. Far less means the flood got
+# inside it.
+LEAK_BELOW = 0.85
+
+
+def clean_cutout(path: str, floor: int = 64, ceiling: int = 250) -> Image.Image:
+    """
+    Use a picture's own alpha instead of cutting one.
+
+    A supplied cut-out usually arrives with a soft drop shadow baked into its
+    alpha and a body that stops a level or two short of solid. Neither is
+    wanted here: the stage lays its own shadow down under the case, and a shell
+    that is 99% opaque veils whatever is behind it. So the alpha is stretched —
+    under `floor` is shadow and goes, over `ceiling` is shell and becomes
+    solid — which leaves the pixel or so of real anti-aliasing in between.
+    """
+    im = Image.open(path).convert("RGBA")
+    alpha = np.asarray(im)[:, :, 3].astype(np.float32)
+    alpha = np.clip((alpha - floor) * (255.0 / (ceiling - floor)), 0, 255).astype(np.uint8)
+    im.putalpha(Image.fromarray(alpha, "L"))
+
+    ys, xs = np.where(alpha > 8)
+    pad = 6
+    h, w = alpha.shape
+    return im.crop(
+        (
+            max(0, xs.min() - pad),
+            max(0, ys.min() - pad),
+            min(w, xs.max() + 1 + pad),
+            min(h, ys.max() + 1 + pad),
+        )
+    )
+
+
 def cutout(path: str, tol: int = 246, feather: float = 1.2) -> Image.Image:
     """
     Lift the case off its white studio background.
@@ -276,12 +456,19 @@ def cutout(path: str, tol: int = 246, feather: float = 1.2) -> Image.Image:
     solid = ndimage.binary_fill_holes(alpha > 127)
     alpha = np.maximum(alpha, solid.astype(np.float32) * 255.0)
 
-    # Soften then re-tighten the edge: anti-aliased, but not a halo.
-    blurred = Image.fromarray(alpha.astype(np.uint8), "L").filter(
-        ImageFilter.GaussianBlur(feather)
-    )
-    alpha = np.clip((np.asarray(blurred).astype(np.float32) - 90) * (255.0 / 90.0), 0, 255)
-    alpha = alpha.astype(np.uint8)
+    def finish(mask: np.ndarray) -> np.ndarray:
+        # Soften then re-tighten the edge: anti-aliased, but not a halo.
+        blurred = Image.fromarray(mask.astype(np.uint8), "L").filter(
+            ImageFilter.GaussianBlur(feather)
+        )
+        out = np.clip((np.asarray(blurred).astype(np.float32) - 90) * (255.0 / 90.0), 0, 255)
+        return out.astype(np.uint8)
+
+    alpha = finish(alpha)
+
+    # Judged after feathering, which closes hairline leaks by itself.
+    if _fill_ratio(alpha) < LEAK_BELOW:
+        alpha = finish(_gated_silhouette(a).astype(np.float32) * 255.0)
 
     out = im.convert("RGBA")
     out.putalpha(Image.fromarray(alpha, "L"))
@@ -319,10 +506,11 @@ def build_images(force: bool = False) -> list[dict]:
     entries = []
     for meta in discover():
         slug, src = meta["slug"], os.path.join(SRC, meta["file"])
+        art = meta["clean"] or src
         png = os.path.join(CASES, f"{slug}.png")
 
-        if force or not _fresh(png, src):
-            out = cutout(src)
+        if force or not _fresh(png, src) or not _fresh(png, art):
+            out = clean_cutout(art) if meta["clean"] else cutout(src)
             out.save(png, optimize=True)
             out.save(os.path.join(CASES, f"{slug}.webp"), quality=92, method=6)
             scale = 900 / out.height
@@ -333,7 +521,7 @@ def build_images(force: bool = False) -> list[dict]:
             Image.open(src).convert("RGB").save(
                 os.path.join(PHOTO, f"{slug}.webp"), quality=90, method=6
             )
-            note = "cut out"
+            note = "own alpha" if meta["clean"] else "cut out"
         else:
             out = Image.open(png).convert("RGBA")
             note = "up to date"

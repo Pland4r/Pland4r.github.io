@@ -157,23 +157,9 @@ python -m pip install pillow numpy scipy
 | `public/video/hero.mp4` | the show-reel band loop + poster |
 | `public/video/dark/…` | the same clips rendered on a dark stage |
 
-The background is removed by flooding inwards from the edge of the frame, but
-the flood may only travel through **paper** — pixels that are both bright and
-*flat*.
-
-Brightness alone is not enough. A white case photographed on a white backdrop
-can have a rim only two or three levels below the paper, which is inside JPEG
-noise: a brightness threshold flickers on and off row to row, the flood pours
-through the gaps and hollows the shell out, leaving an outline around a
-transparent case. That same rim still spikes the local gradient, so requiring
-flatness blocks it. The image is blurred before the gradient is measured,
-because JPEG noise alone produces a gradient of about one level.
-
-The threshold is also read from each photo's own backdrop rather than fixed,
-and only the largest region is kept so a speck of sensor noise out in the paper
-cannot drag the crop out to meet it.
-
-**The printed artwork is never edited, recoloured or retouched** — the videos are the real photo lit on a
+The cut-out only removes background that is connected to the edge of the frame,
+which is why the white cases survive it intact. **The printed artwork is never
+edited, recoloured or retouched** — the videos are the real photo lit on a
 studio background, and the “Real photo” tab on every product shows the untouched
 original so a customer can always check.
 

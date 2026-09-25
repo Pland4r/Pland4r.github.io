@@ -188,6 +188,9 @@ export const overrides: Record<string, Override> = {
 
   'bugatti-chiron-pur-sport': {
     caption: '“Chiron Pur Sport”',
+    // The sampler reads the interior, and the huge dark BUGATTI lettering fills
+    // most of it — so a white case measures as graphite.
+    shellLabel: 'Gloss White',
     blurb:
       'BUGATTI in enormous gradient type running off both edges, with the green ' +
       'Chiron Pur Sport cutting across it and a spec strip along the foot.',

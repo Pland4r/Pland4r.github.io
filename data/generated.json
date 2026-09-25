@@ -18,7 +18,7 @@
     "model": "M3 Touring",
     "variant": "",
     "shellLabel": "Gloss Black",
-    "swatch": "#1b1c1c",
+    "swatch": "#1b1d1d",
     "accent": "#38c1d7"
   },
   {
@@ -29,7 +29,7 @@
     "model": "M4 CSL",
     "variant": "",
     "shellLabel": "Gloss White",
-    "swatch": "#e0e1e2",
+    "swatch": "#e1e1e2",
     "accent": "#8aa0c0"
   },
   {
@@ -40,19 +40,8 @@
     "model": "M5",
     "variant": "",
     "shellLabel": "Gloss Black",
-    "swatch": "#060707",
+    "swatch": "#060606",
     "accent": "#8aa0c0"
-  },
-  {
-    "slug": "bugatti-chiron-pur-sport",
-    "file": "Bugatti - Chiron Pur Sport.jpeg",
-    "named": true,
-    "marque": "Bugatti",
-    "model": "Chiron Pur Sport",
-    "variant": "",
-    "shellLabel": "Gloss White",
-    "swatch": "#f3f3f5",
-    "accent": "#7dd7c0"
   },
   {
     "slug": "mclaren-senna",
@@ -62,7 +51,7 @@
     "model": "Senna",
     "variant": "",
     "shellLabel": "Dusty Pink",
-    "swatch": "#b58d94",
+    "swatch": "#b58d95",
     "accent": "#d74270"
   },
   {
@@ -139,7 +128,7 @@
     "model": "911 GT3 RS",
     "variant": "Roar",
     "shellLabel": "Gloss Black",
-    "swatch": "#141413",
+    "swatch": "#151414",
     "accent": "#d74f51"
   },
   {

@@ -27,7 +27,6 @@ Requires: pillow, numpy, scipy, and ffmpeg on PATH.
 
 from __future__ import annotations
 
-import hashlib
 import json
 import math
 import os
@@ -35,7 +34,7 @@ import subprocess
 import sys
 
 import numpy as np
-from PIL import Image, ImageDraw, ImageFilter
+from PIL import Image, ImageFilter
 from scipy import ndimage
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -43,9 +42,6 @@ SRC = os.path.join(ROOT, "pic")
 CASES = os.path.join(ROOT, "public", "cases")
 PHOTO = os.path.join(CASES, "photo")
 VIDEO = os.path.join(ROOT, "public", "video")
-
-# How far below its own backdrop a pixel must sit to count as the case.
-BACKDROP_MARGIN = 4
 
 FPS = 30
 
@@ -253,84 +249,13 @@ def _trim_black_bars(a: np.ndarray) -> tuple[int, int, int, int]:
     return top, bottom + 1, left, right + 1
 
 
-def _silhouette(a: np.ndarray, blur: float = 1.2, gradient: float = 1.2,
-                margin: int = BACKDROP_MARGIN) -> np.ndarray:
+def cutout(path: str, tol: int = 246, feather: float = 1.2) -> Image.Image:
     """
-    The case, as everything the backdrop cannot reach from the edge of the frame.
+    Lift the case off its white studio background.
 
-    The flood may only travel through paper — pixels that are both bright and
-    *flat*. Brightness alone is not enough: a white case on a white backdrop can
-    have a rim only two or three levels below the paper, which is inside JPEG
-    noise, so a brightness threshold flickers on and off row to row and the
-    flood pours through the gaps and hollows the shell out. That same rim still
-    spikes the local gradient, so requiring flatness blocks it.
-
-    The image is blurred before the gradient is taken because JPEG noise alone
-    produces a gradient of about one level.
-    """
-    darkest = a.min(axis=2).astype(float)
-    border = np.concatenate(
-        [darkest[0, :], darkest[-1, :], darkest[:, 0], darkest[:, -1]]
-    )
-    backdrop = float(np.median(border))
-
-    smoothed = ndimage.gaussian_filter(darkest, blur)
-    slope = np.hypot(ndimage.sobel(smoothed, 0), ndimage.sobel(smoothed, 1))
-    passable = (darkest >= backdrop - margin) & (slope < gradient)
-
-    labels, _ = ndimage.label(passable)
-    edge = set(labels[0, :]) | set(labels[-1, :]) | set(labels[:, 0]) | set(labels[:, -1])
-    edge.discard(0)
-    solid = ndimage.binary_fill_holes(~np.isin(labels, list(edge)))
-
-    # Keep only the case itself; a speck of sensor noise out in the paper would
-    # otherwise drag the crop out to meet it.
-    parts, n = ndimage.label(solid)
-    if n > 1:
-        sizes = ndimage.sum(np.ones_like(parts), parts, range(1, n + 1))
-        solid = parts == (1 + int(np.argmax(sizes)))
-    return solid
-
-
-def _feather(solid: np.ndarray, feather: float) -> np.ndarray:
-    """Soften then re-tighten the edge: anti-aliased, but not a halo."""
-    blurred = Image.fromarray((solid * 255).astype(np.uint8), "L").filter(
-        ImageFilter.GaussianBlur(feather)
-    )
-    a = np.clip((np.asarray(blurred).astype(np.float32) - 90) * (255.0 / 90.0), 0, 255)
-    return a.astype(np.uint8)
-
-
-def _fill_ratio(alpha: np.ndarray) -> float:
-    """How much of its own bounding box the silhouette occupies."""
-    mask = alpha > 128
-    ys, xs = np.where(mask)
-    if len(ys) == 0:
-        return 0.0
-    return mask[ys.min():ys.max() + 1, xs.min():xs.max() + 1].mean()
-
-
-# A phone case fills 90-97% of its bounding box. Far less means the silhouette
-# failed outright and the photo is better shown uncut.
-LEAK_BELOW = 0.80
-
-
-def _rounded(size: tuple[int, int], radius: int) -> Image.Image:
-    mask = Image.new("L", size, 0)
-    ImageDraw.Draw(mask).rounded_rectangle((0, 0, size[0] - 1, size[1] - 1),
-                                           radius=radius, fill=255)
-    return mask
-
-
-def cutout(path: str, feather: float = 1.2) -> Image.Image:
-    """
-    Lift the case off its studio background.
-
-    Only the background is removed; the printed artwork is never touched.
-
-    If a photo ever defeats the silhouette entirely the image is kept whole on a
-    rounded plate instead — a torn cut-out looks worse than an uncut photo. No
-    case in the collection needs it.
+    Only white that is *connected to the border* is removed, which is what keeps
+    the white cases intact — their shells are enclosed by the case outline, so
+    they are never reachable from the edge of the frame.
     """
     im = Image.open(path).convert("RGB")
     a = np.asarray(im).astype(np.int16)
@@ -340,67 +265,37 @@ def cutout(path: str, feather: float = 1.2) -> Image.Image:
     im = im.crop((left, top, right, bottom))
     h, w = a.shape[:2]
 
-    alpha = _feather(_silhouette(a), feather)
+    near_white = (a[:, :, 0] >= tol) & (a[:, :, 1] >= tol) & (a[:, :, 2] >= tol)
 
-    ys, xs = np.where(alpha > 8)
-    pad = 6
-    box = (
-        max(0, xs.min() - pad),
-        max(0, ys.min() - pad),
-        min(w, xs.max() + 1 + pad),
-        min(h, ys.max() + 1 + pad),
+    labels, _ = ndimage.label(near_white)
+    border = set(labels[0, :]) | set(labels[-1, :]) | set(labels[:, 0]) | set(labels[:, -1])
+    border.discard(0)
+    outside = np.isin(labels, list(border))
+
+    alpha = (~outside).astype(np.float32) * 255.0
+    solid = ndimage.binary_fill_holes(alpha > 127)
+    alpha = np.maximum(alpha, solid.astype(np.float32) * 255.0)
+
+    # Soften then re-tighten the edge: anti-aliased, but not a halo.
+    blurred = Image.fromarray(alpha.astype(np.uint8), "L").filter(
+        ImageFilter.GaussianBlur(feather)
     )
-
-    if _fill_ratio(alpha) < LEAK_BELOW:
-        plate = im.crop(box).convert("RGBA")
-        plate.putalpha(_rounded(plate.size, int(min(plate.size) * 0.05)))
-        return plate
+    alpha = np.clip((np.asarray(blurred).astype(np.float32) - 90) * (255.0 / 90.0), 0, 255)
+    alpha = alpha.astype(np.uint8)
 
     out = im.convert("RGBA")
     out.putalpha(Image.fromarray(alpha, "L"))
-    return out.crop(box)
 
-
-def _digest(path: str) -> str:
-    """Content hash of a file, or "" when it is missing."""
-    if not os.path.exists(path):
-        return ""
-    h = hashlib.sha1()
-    with open(path, "rb") as f:
-        for chunk in iter(lambda: f.read(1 << 20), b""):
-            h.update(chunk)
-    return h.hexdigest()
-
-
-# What each rendered clip was built from. Keyed by output path, holding the hash
-# of the cut-out it came from.
-RENDERED = os.path.join(VIDEO, ".rendered.json")
-
-
-def _load_rendered() -> dict[str, str]:
-    if not os.path.exists(RENDERED):
-        return {}
-    try:
-        with open(RENDERED, encoding="utf-8") as f:
-            return json.load(f)
-    except (json.JSONDecodeError, OSError):
-        return {}
-
-
-def _save_rendered(state: dict[str, str]) -> None:
-    os.makedirs(VIDEO, exist_ok=True)
-    with open(RENDERED, "w", encoding="utf-8") as f:
-        json.dump(state, f, indent=2, sort_keys=True)
-        f.write(chr(10))
-
-
-def _collection_digest() -> str:
-    """One hash covering every cut-out, since the hero shows all of them."""
-    h = hashlib.sha1()
-    for e in catalogue():
-        h.update(e["slug"].encode())
-        h.update(_digest(os.path.join(CASES, f"{e['slug']}.png")).encode())
-    return h.hexdigest()
+    ys, xs = np.where(alpha > 8)
+    pad = 6
+    return out.crop(
+        (
+            max(0, xs.min() - pad),
+            max(0, ys.min() - pad),
+            min(w, xs.max() + 1 + pad),
+            min(h, ys.max() + 1 + pad),
+        )
+    )
 
 
 def _fresh(target: str, source: str) -> bool:
@@ -726,12 +621,6 @@ def build_video(only: list[str] | None = None) -> None:
     os.makedirs(VIDEO, exist_ok=True)
     entries = [e for e in catalogue() if not only or e["slug"] in only]
 
-    # Keyed on the cut-out's contents rather than its timestamp: a git checkout
-    # gives every file the same mtime, so a timestamp check would re-render the
-    # whole collection at random on CI.
-    state = _load_rendered()
-    digests = {e["slug"]: _digest(os.path.join(CASES, f"{e['slug']}.png")) for e in entries}
-
     for dark in (False, True):
         label = "dark" if dark else "light"
         out_dir = os.path.join(VIDEO, "dark") if dark else VIDEO
@@ -739,31 +628,28 @@ def build_video(only: list[str] | None = None) -> None:
         for e in entries:
             slug = e["slug"]
             clip = os.path.join(out_dir, f"{slug}.mp4")
-            key = os.path.relpath(clip, VIDEO).replace(os.sep, "/")
-            if not only and os.path.exists(clip) and state.get(key) == digests[slug]:
+            src = os.path.join(CASES, f"{slug}.png")
+            if not only and _fresh(clip, src):
                 print(f"  clip  {label:5s} {slug} — up to date", flush=True)
                 continue
             print(f"  clip  {label:5s} {slug}", flush=True)
             product_clip(slug, e["accent"], dark=dark)
-            state[key] = digests[slug]
-            _save_rendered(state)
             rendered += 1
 
         # The hero is a band of every case, so it only needs rebuilding when the
         # set changed. Without this a code-only push pays three minutes to
         # re-render a video identical to the one already published.
         hero = os.path.join(out_dir, "hero.mp4")
-        hero_key = os.path.relpath(hero, VIDEO).replace(os.sep, "/")
-        # The hero is a band of every case, so it tracks the whole collection.
-        hero_digest = _collection_digest()
-        if os.path.exists(hero) and state.get(hero_key) == hero_digest:
+        newest = max(
+            (os.path.getmtime(os.path.join(CASES, f"{e['slug']}.png")) for e in entries),
+            default=0,
+        )
+        if not rendered and os.path.exists(hero) and os.path.getmtime(hero) >= newest:
             print(f"  hero  {label} — up to date", flush=True)
             continue
 
         print(f"  hero  {label}", flush=True)
         hero_clip(dark=dark)
-        state[hero_key] = hero_digest
-        _save_rendered(state)
 
 
 # ------------------------------------------------------------------------ main

@@ -143,6 +143,20 @@ Overrides can also correct a generated reading:
 }
 ```
 
+### Why a re-rendered case shows up straight away
+
+Every generated file keeps its name for life — re-rendering a case writes over
+`bugatti-chiron-pur-sport-md.webp`, it does not write a new file — and the
+images go out with a week of cache on them. So a visitor who has seen the site
+before would keep the old picture for a week after it was fixed, with nothing
+about the deploy looking wrong from the outside.
+
+`scripts/assets.py` therefore hashes the files a browser actually fetches for
+each case and writes **`data/rev.json`**. The site hangs that off every asset
+URL as `?v=`, so a re-rendered case is a different URL and is fetched again,
+while an unchanged one keeps its stamp and stays cached. `data/rev.ts` is the
+one-line helper; nothing about it needs maintaining.
+
 ### Removing one
 
 Delete the photo from `pic/`. The next build prunes its generated assets and

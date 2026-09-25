@@ -1,6 +1,7 @@
 'use client';
 
 import { useTheme } from './useTheme';
+import { rev } from '@/data/rev';
 
 /**
  * The full-width video band under the hero.
@@ -17,8 +18,8 @@ export default function ShowReel() {
       <video
         key={dir}
         className="reel__video"
-        src={`${dir}/hero.mp4`}
-        poster={`${dir}/hero-poster.webp`}
+        src={`${dir}/hero.mp4${rev('hero')}`}
+        poster={`${dir}/hero-poster.webp${rev('hero')}`}
         autoPlay
         muted
         loop

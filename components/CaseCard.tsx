@@ -6,6 +6,7 @@ import { formatPrice } from '@/data/site';
 import Drips from './Drips';
 import { ArrowRight } from './Icons';
 import { useTheme } from './useTheme';
+import { rev } from '../data/rev';
 
 type Props = {
   item: Case;
@@ -23,7 +24,8 @@ export default function CaseCard({ item, onOpen }: Props) {
   // The clips are rendered on both a light and a dark stage; play the one that
   // matches the page so a bright clip never flashes inside a dark card.
   const { theme } = useTheme();
-  const clip = theme === 'dark' ? `/video/dark/${item.slug}.mp4` : `/video/${item.slug}.mp4`;
+  const dir = theme === 'dark' ? '/video/dark' : '/video';
+  const clip = `${dir}/${item.slug}.mp4${rev(item.slug)}`;
 
   const start = useCallback(() => {
     const v = videoRef.current;
@@ -74,7 +76,7 @@ export default function CaseCard({ item, onOpen }: Props) {
       <span className="card__stage">
         <img
           className="card__still"
-          src={`/cases/${item.slug}-md.webp`}
+          src={`/cases/${item.slug}-md.webp${rev(item.slug)}`}
           alt={`${item.marque} ${item.model} phone case`}
           loading="lazy"
           decoding="async"

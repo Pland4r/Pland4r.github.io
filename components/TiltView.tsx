@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Case } from '@/data/cases';
+import { rev } from '@/data/rev';
 
 /** How far the case turns at the edges of the stage. */
 const MAX_DEG = 34;
@@ -100,7 +101,7 @@ export default function TiltView({ item }: Props) {
     >
       <img
         className="tilt__case"
-        src={`/cases/${item.slug}.webp`}
+        src={`/cases/${item.slug}.webp${rev(item.slug)}`}
         alt={`${item.marque} ${item.model} phone case`}
         draggable={false}
         style={{

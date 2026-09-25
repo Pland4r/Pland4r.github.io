@@ -2,6 +2,7 @@
 
 import { useCallback, useRef, useState } from 'react';
 import type { Case } from '@/data/cases';
+import { rev } from '@/data/rev';
 
 type Props = { item: Case };
 
@@ -53,7 +54,7 @@ export default function HeroCase({ item }: Props) {
     >
       <span className="herocase__inner">
         <img
-          src={`/cases/${item.slug}.webp`}
+          src={`/cases/${item.slug}.webp${rev(item.slug)}`}
           alt={`${item.marque} ${item.model} phone case`}
           width={514}
           height={989}

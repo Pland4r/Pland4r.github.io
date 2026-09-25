@@ -31,6 +31,7 @@ Requires: pillow, numpy, scipy, and ffmpeg on PATH.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import math
 import os
@@ -64,6 +65,7 @@ FPS = 30
 PHOTO_TYPES = (".jpeg", ".jpg", ".png", ".webp")
 
 GENERATED = os.path.join(ROOT, "data", "generated.json")
+REV = os.path.join(ROOT, "data", "rev.json")
 NAMES = os.path.join(ROOT, "data", "names.json")
 
 
@@ -840,7 +842,58 @@ def build_video(only: list[str] | None = None) -> None:
         hero_clip(dark=dark)
 
 
+def stamp() -> dict:
+    """
+    A short content hash per case, and one for the hero.
+
+    Every generated file keeps its name for life — re-rendering a case writes
+    over `bugatti-chiron-pur-sport-md.webp`, it does not write a new file. The
+    images are served with a week of cache, so without this a visitor who has
+    seen the site before keeps the old picture for a week after it is fixed,
+    and nothing about the deploy looks wrong.
+
+    So the site hangs `?v=` off each asset URL. The hash covers every file the
+    browser actually fetches for that case, which is why this runs at the end
+    of a build rather than inside the stills pass: the clips are not written
+    until after `generated.json` is.
+    """
+    def digest(paths: list[str]) -> str:
+        h = hashlib.sha1()
+        for path in paths:
+            if os.path.exists(path):
+                with open(path, "rb") as f:
+                    h.update(f.read())
+        return h.hexdigest()[:10]
+
+    revs = {
+        "hero": digest([
+            os.path.join(VIDEO, "hero.mp4"),
+            os.path.join(VIDEO, "hero-poster.webp"),
+            os.path.join(VIDEO, "dark", "hero.mp4"),
+            os.path.join(VIDEO, "dark", "hero-poster.webp"),
+        ])
+    }
+    with open(GENERATED, encoding="utf-8") as f:
+        for entry in json.load(f):
+            slug = entry["slug"]
+            revs[slug] = digest([
+                os.path.join(CASES, f"{slug}.webp"),
+                os.path.join(CASES, f"{slug}-md.webp"),
+                os.path.join(PHOTO, f"{slug}.webp"),
+                os.path.join(VIDEO, f"{slug}.mp4"),
+                os.path.join(VIDEO, f"{slug}-poster.webp"),
+                os.path.join(VIDEO, "dark", f"{slug}.mp4"),
+                os.path.join(VIDEO, "dark", f"{slug}-poster.webp"),
+            ])
+
+    with open(REV, "w", encoding="utf-8") as f:
+        json.dump(revs, f, indent=2, sort_keys=True)
+        f.write(chr(10))
+    return revs
+
+
 # ------------------------------------------------------------------------ main
+
 
 if __name__ == "__main__":
     what = sys.argv[1] if len(sys.argv) > 1 else "all"
@@ -852,4 +905,6 @@ if __name__ == "__main__":
         print("video")
         build_video(only=[a for a in sys.argv[2:] if not a.startswith("-")] or None)
 
+    stamp()
+    print("  -> data/rev.json")
     print("done")

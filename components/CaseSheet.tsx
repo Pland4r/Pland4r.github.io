@@ -6,6 +6,7 @@ import { formatPrice, site } from '@/data/site';
 import { Close } from './Icons';
 import TiltView from './TiltView';
 import { useTheme } from './useTheme';
+import { rev } from '../data/rev';
 
 type Props = {
   item: Case;
@@ -98,8 +99,8 @@ export default function CaseSheet({ item, onClose }: Props) {
               {view === 'motion' ? (
                 <video
                   key={`${item.slug}-${theme}`}
-                  src={`${clipDir}/${item.slug}.mp4`}
-                  poster={`${clipDir}/${item.slug}-poster.webp`}
+                  src={`${clipDir}/${item.slug}.mp4${rev(item.slug)}`}
+                  poster={`${clipDir}/${item.slug}-poster.webp${rev(item.slug)}`}
                   autoPlay
                   muted
                   loop
@@ -111,7 +112,7 @@ export default function CaseSheet({ item, onClose }: Props) {
               ) : (
                 <img
                   className="is-photo"
-                  src={`/cases/photo/${item.slug}.webp`}
+                  src={`/cases/photo/${item.slug}.webp${rev(item.slug)}`}
                   alt={`Unretouched photograph of the ${item.marque} ${item.model} case`}
                 />
               )}

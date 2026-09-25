@@ -157,12 +157,17 @@ python -m pip install pillow numpy scipy
 | `public/video/hero.mp4` | the show-reel band loop + poster |
 | `public/video/dark/…` | the same clips rendered on a dark stage |
 
-The cut-out rebuilds the case silhouette rather than flooding the background
-inwards. Flooding fails on a white case photographed on white: one hairline gap
-in the rim and the flood eats the whole shell, leaving an outline around a
-hollow case. A phone case is convex, so every row of its silhouette is a single
-unbroken span — and so is every column — which reconstructs it from its own
-shape instead. **The printed artwork is never edited, recoloured or retouched** — the videos are the real photo lit on a
+The background threshold is read from each photo's own backdrop rather than
+fixed, because a case rim can sit only a few levels below the paper it is shot
+on and a fixed cut lands inside that margin.
+
+**Shoot on anything but white.** A white case on a white backdrop can have a rim
+whose contrast falls inside JPEG noise — the Chiron's right edge reads 235-247
+against a 253-255 background — and no threshold separates that reliably. When a
+cut-out comes out hollow the photo is kept whole on a rounded plate instead: a
+silhouette guessed from an edge nobody can see comes out torn, and a clean plate
+beats a ragged cut-out. Any non-white surface, even a grey sheet, cuts out
+perfectly. **The printed artwork is never edited, recoloured or retouched** — the videos are the real photo lit on a
 studio background, and the “Real photo” tab on every product shows the untouched
 original so a customer can always check.
 

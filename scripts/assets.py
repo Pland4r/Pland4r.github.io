@@ -35,7 +35,7 @@ import subprocess
 import sys
 
 import numpy as np
-from PIL import Image, ImageFilter
+from PIL import Image, ImageDraw, ImageFilter
 from scipy import ndimage
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -43,6 +43,9 @@ SRC = os.path.join(ROOT, "pic")
 CASES = os.path.join(ROOT, "public", "cases")
 PHOTO = os.path.join(CASES, "photo")
 VIDEO = os.path.join(ROOT, "public", "video")
+
+# How far below its own backdrop a pixel must sit to count as the case.
+BACKDROP_MARGIN = 4
 
 FPS = 30
 
@@ -259,77 +262,16 @@ def _flood_silhouette(near_white: np.ndarray) -> np.ndarray:
     labels, _ = ndimage.label(near_white)
     border = set(labels[0, :]) | set(labels[-1, :]) | set(labels[:, 0]) | set(labels[:, -1])
     border.discard(0)
-    return ndimage.binary_fill_holes(~np.isin(labels, list(border)))
+    solid = ndimage.binary_fill_holes(~np.isin(labels, list(border)))
 
-
-def _flank(ys: np.ndarray, vals: np.ndarray, outward: int):
-    """
-    Fit one straight flank of the case.
-
-    Bins where the rim went undetected read far inside the true edge, so only
-    bins near the outermost reading are fitted — the rest are dropouts.
-    """
-    bins = np.linspace(ys[0], ys[-1], 21)
-    centres, edges = [], []
-    for lo, hi in zip(bins[:-1], bins[1:]):
-        m = (ys >= lo) & (ys < hi)
-        if m.any():
-            centres.append(ys[m].mean())
-            edges.append(np.percentile(vals[m], 92 if outward > 0 else 8))
-    if len(centres) < 4:
-        return None
-
-    centres, edges = np.array(centres), np.array(edges)
-    extreme = edges.max() if outward > 0 else edges.min()
-    keep = np.abs(edges - extreme) <= 0.04 * (ys[-1] - ys[0])
-    if keep.sum() < 3:
-        return None
-    return np.polyfit(centres[keep], edges[keep], 1)
-
-
-def _rebuilt_silhouette(near_white: np.ndarray, seal: int = 4,
-                        smooth: int = 61, corner: float = 0.035) -> np.ndarray:
-    """
-    Reconstruct the case from its own shape, for photos the flood cannot handle.
-
-    A white case on a white background can have a rim that vanishes into the
-    backdrop for a long stretch. One hairline gap and the flood pours inside and
-    eats the shell, leaving an outline around a hollow case. A phone case is
-    convex, so each row is a single span; where the rim went undetected the span
-    is rebuilt from the straight flanks fitted across the rest of the case.
-    """
-    fg = ndimage.binary_closing(~near_white, iterations=seal)
-    labels, n = ndimage.label(fg)
-    if n == 0:
-        return ~near_white
-    sizes = ndimage.sum(np.ones_like(labels), labels, range(1, n + 1))
-    case = labels == (1 + int(np.argmax(sizes)))
-
-    rows = np.where(case.any(axis=1))[0]
-    if len(rows) < 10:
-        return case
-    widths = np.array([case[y].sum() for y in rows])
-    keep = np.where(widths > 0.30 * np.median(widths))[0]
-    ys = rows[keep[0]:keep[-1] + 1]
-
-    left = ndimage.grey_opening(
-        np.array([np.where(case[y])[0][0] for y in ys], float), size=smooth, mode="nearest")
-    right = ndimage.grey_closing(
-        np.array([np.where(case[y])[0][-1] for y in ys], float), size=smooth, mode="nearest")
-
-    # Everything but the rounded ends, which genuinely curve inwards.
-    span = ys[-1] - ys[0]
-    inner = (ys > ys[0] + span * corner) & (ys < ys[-1] - span * corner)
-    fit_r, fit_l = _flank(ys[inner], right[inner], +1), _flank(ys[inner], left[inner], -1)
-    if fit_r is not None:
-        right[inner] = np.maximum(right[inner], fit_r[0] * ys[inner] + fit_r[1])
-    if fit_l is not None:
-        left[inner] = np.minimum(left[inner], fit_l[0] * ys[inner] + fit_l[1])
-
-    out = np.zeros_like(case)
-    for i, y in enumerate(ys):
-        out[y, max(0, int(round(left[i]))):int(round(right[i])) + 1] = True
-    return out
+    # Keep only the case itself. Reading the threshold off the backdrop catches
+    # faint rims, but also the odd speck of sensor noise out in the paper, and
+    # one speck in a corner would drag the crop out to meet it.
+    parts, n = ndimage.label(solid)
+    if n > 1:
+        sizes = ndimage.sum(np.ones_like(parts), parts, range(1, n + 1))
+        solid = parts == (1 + int(np.argmax(sizes)))
+    return solid
 
 
 def _feather(solid: np.ndarray, feather: float) -> np.ndarray:
@@ -350,16 +292,32 @@ def _fill_ratio(alpha: np.ndarray) -> float:
     return mask[ys.min():ys.max() + 1, xs.min():xs.max() + 1].mean()
 
 
-# A phone case fills about 92-95% of its bounding box. Much less means the
-# background flooded inside it.
-LEAK_BELOW = 0.85
+# A phone case fills about 92-97% of its bounding box. Much less means the
+# background flooded inside it and hollowed the shell out.
+LEAK_BELOW = 0.88
 
 
-def cutout(path: str, tol: int = 246, feather: float = 1.2) -> Image.Image:
+def _rounded(size: tuple[int, int], radius: int) -> Image.Image:
+    mask = Image.new("L", size, 0)
+    ImageDraw.Draw(mask).rounded_rectangle((0, 0, size[0] - 1, size[1] - 1),
+                                           radius=radius, fill=255)
+    return mask
+
+
+def cutout(path: str, feather: float = 1.2) -> Image.Image:
     """
     Lift the case off its white studio background.
 
     Only the background is removed; the printed artwork is never touched.
+
+    The threshold is taken from each photo's own backdrop rather than fixed,
+    because a case edge can be only a few levels darker than the paper it sits
+    on and a fixed cut lands inside that margin.
+
+    Where even that fails — a white case on white whose rim disappears into the
+    backdrop — the photo is kept whole on a rounded plate instead. A silhouette
+    guessed from a case nobody can see the edge of comes out torn, and a clean
+    plate is better than a ragged cut-out.
     """
     im = Image.open(path).convert("RGB")
     a = np.asarray(im).astype(np.int16)
@@ -369,29 +327,36 @@ def cutout(path: str, tol: int = 246, feather: float = 1.2) -> Image.Image:
     im = im.crop((left, top, right, bottom))
     h, w = a.shape[:2]
 
-    near_white = (a[:, :, 0] >= tol) & (a[:, :, 1] >= tol) & (a[:, :, 2] >= tol)
+    darkest = a.min(axis=2)
+    border = np.concatenate([darkest[0, :], darkest[-1, :], darkest[:, 0], darkest[:, -1]])
+    tol = int(np.median(border)) - BACKDROP_MARGIN
+
+    near_white = darkest >= tol
 
     # Measured after feathering, not before: the feather closes hairline leaks
-    # on its own, so judging the raw flood would call three sound cases broken.
-    alpha = _feather(_flood_silhouette(near_white), feather)
-    if _fill_ratio(alpha) < LEAK_BELOW:
-        alpha = _feather(
-            ndimage.binary_fill_holes(_rebuilt_silhouette(near_white)), feather
-        )
-
-    out = im.convert("RGBA")
-    out.putalpha(Image.fromarray(alpha, "L"))
+    # on its own, so judging the raw flood would call sound cases broken.
+    solid = _flood_silhouette(near_white)
+    alpha = _feather(solid, feather)
 
     ys, xs = np.where(alpha > 8)
     pad = 6
-    return out.crop(
-        (
-            max(0, xs.min() - pad),
-            max(0, ys.min() - pad),
-            min(w, xs.max() + 1 + pad),
-            min(h, ys.max() + 1 + pad),
-        )
+    box = (
+        max(0, xs.min() - pad),
+        max(0, ys.min() - pad),
+        min(w, xs.max() + 1 + pad),
+        min(h, ys.max() + 1 + pad),
     )
+
+    if _fill_ratio(alpha) < LEAK_BELOW:
+        # Un-cut, cropped to the case, corners softened so it reads as a photo
+        # tile rather than a raw rectangle.
+        plate = im.crop(box).convert("RGBA")
+        plate.putalpha(_rounded(plate.size, int(min(plate.size) * 0.05)))
+        return plate
+
+    out = im.convert("RGBA")
+    out.putalpha(Image.fromarray(alpha, "L"))
+    return out.crop(box)
 
 
 def _digest(path: str) -> str:

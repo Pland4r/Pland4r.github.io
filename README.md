@@ -157,9 +157,12 @@ python -m pip install pillow numpy scipy
 | `public/video/hero.mp4` | the show-reel band loop + poster |
 | `public/video/dark/…` | the same clips rendered on a dark stage |
 
-The cut-out only removes background that is connected to the edge of the frame,
-which is why the white cases survive it intact. **The printed artwork is never
-edited, recoloured or retouched** — the videos are the real photo lit on a
+The cut-out rebuilds the case silhouette rather than flooding the background
+inwards. Flooding fails on a white case photographed on white: one hairline gap
+in the rim and the flood eats the whole shell, leaving an outline around a
+hollow case. A phone case is convex, so every row of its silhouette is a single
+unbroken span — and so is every column — which reconstructs it from its own
+shape instead. **The printed artwork is never edited, recoloured or retouched** — the videos are the real photo lit on a
 studio background, and the “Real photo” tab on every product shows the untouched
 original so a customer can always check.
 

@@ -1,22 +1,24 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { cases, getCase } from '@/data/cases';
-import { Spell } from '@/data/count';
+import { collection, getCase } from '@/data/cases';
+import { getCopy, type Locale } from '@/data/i18n';
 import CaseCard from './CaseCard';
 import CaseSheet from './CaseSheet';
 import Reveal from './Reveal';
 
 const ALL = 'All';
 
-export default function Collection() {
+export default function Collection({ locale }: { locale: Locale }) {
+  const copy = getCopy(locale);
+  const cases = useMemo(() => collection(locale), [locale]);
   const [open, setOpen] = useState<string | null>(null);
   const [filter, setFilter] = useState<string>(ALL);
 
-  const marques = useMemo(() => [ALL, ...Array.from(new Set(cases.map((c) => c.marque)))], []);
+  const marques = useMemo(() => [ALL, ...Array.from(new Set(cases.map((c) => c.marque)))], [cases]);
   const shown = useMemo(
     () => (filter === ALL ? cases : cases.filter((c) => c.marque === filter)),
-    [filter],
+    [cases, filter],
   );
 
   const close = useCallback(() => setOpen(null), []);
@@ -26,12 +28,12 @@ export default function Collection() {
   useEffect(() => {
     const onOpen = (e: Event) => {
       const slug = (e as CustomEvent<string>).detail;
-      if (getCase(slug)) setOpen(slug);
+      if (getCase(slug, locale)) setOpen(slug);
     };
     window.addEventListener('macases:open', onOpen);
     return () => window.removeEventListener('macases:open', onOpen);
-  }, []);
-  const active = open ? getCase(open) : undefined;
+  }, [locale]);
+  const active = open ? getCase(open, locale) : undefined;
 
   return (
     <section className="section" id="collection">
@@ -41,18 +43,13 @@ export default function Collection() {
       <div className="wrap">
         <div className="sec-head">
           <Reveal className="sec-head__text">
-            <p className="eyebrow">The collection</p>
-            <h2 className="h1">
-              {Spell(cases.length)} cars. {Spell(cases.length)} cases.
-            </h2>
-            <p className="lede">
-              Open any case for the artwork breakdown, a 3D turn you can move, and the
-              untouched product photo.
-            </p>
+            <p className="eyebrow">{copy.collection.eyebrow}</p>
+            <h2 className="h1">{copy.collection.heading(cases.length)}</h2>
+            <p className="lede">{copy.collection.lede}</p>
           </Reveal>
 
           <Reveal delay={120}>
-            <div className="viewtabs" role="group" aria-label="Filter by marque">
+            <div className="viewtabs" role="group" aria-label={copy.collection.filterLabel}>
               {marques.map((m) => (
                 <button
                   key={m}
@@ -60,7 +57,7 @@ export default function Collection() {
                   aria-pressed={filter === m}
                   onClick={() => setFilter(m)}
                 >
-                  {m}
+                  {m === ALL ? copy.collection.all : m}
                 </button>
               ))}
             </div>
@@ -70,13 +67,13 @@ export default function Collection() {
         <div className="grid">
           {shown.map((item, i) => (
             <Reveal key={item.slug} delay={i * 70}>
-              <CaseCard item={item} onOpen={setOpen} />
+              <CaseCard item={item} onOpen={setOpen} locale={locale} />
             </Reveal>
           ))}
         </div>
       </div>
 
-      {active ? <CaseSheet item={active} onClose={close} /> : null}
+      {active ? <CaseSheet item={active} onClose={close} locale={locale} /> : null}
     </section>
   );
 }

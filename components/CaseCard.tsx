@@ -2,6 +2,7 @@
 
 import { useCallback, useRef, useState } from 'react';
 import type { Case } from '@/data/cases';
+import { getCopy, path, type Locale } from '@/data/i18n';
 import { formatPrice } from '@/data/site';
 import Drips from './Drips';
 import { ArrowRight } from './Icons';
@@ -11,6 +12,7 @@ import { rev } from '../data/rev';
 type Props = {
   item: Case;
   onOpen: (slug: string) => void;
+  locale: Locale;
 };
 
 /**
@@ -18,7 +20,8 @@ type Props = {
  * on hover or keyboard focus, so a visitor on mobile data never pays for six
  * videos up front.
  */
-export default function CaseCard({ item, onOpen }: Props) {
+export default function CaseCard({ item, onOpen, locale }: Props) {
+  const copy = getCopy(locale);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [playing, setPlaying] = useState(false);
   // The clips are rendered on both a light and a dark stage; play the one that
@@ -37,8 +40,24 @@ export default function CaseCard({ item, onOpen }: Props) {
       });
   }, []);
 
+  /**
+   * The card is a real link to the case's own page, so it can be copied, sent
+   * and crawled. A plain click is intercepted and opens the sheet instead,
+   * which is the nicer way to browse — but only a plain one: a modified click
+   * or a middle click still means "open that page", and taking it over would
+   * break the one thing the link is there for.
+   */
+  const openHere = useCallback(
+    (e: React.MouseEvent<HTMLAnchorElement>) => {
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+      e.preventDefault();
+      onOpen(item.slug);
+    },
+    [item.slug, onOpen],
+  );
+
   // A soft light that follows the cursor across the tile.
-  const spotlight = useCallback((e: React.PointerEvent<HTMLButtonElement>) => {
+  const spotlight = useCallback((e: React.PointerEvent<HTMLAnchorElement>) => {
     const r = e.currentTarget.getBoundingClientRect();
     e.currentTarget.style.setProperty('--mx', `${((e.clientX - r.left) / r.width) * 100}%`);
     e.currentTarget.style.setProperty('--my', `${((e.clientY - r.top) / r.height) * 100}%`);
@@ -53,8 +72,8 @@ export default function CaseCard({ item, onOpen }: Props) {
   }, []);
 
   return (
-    <button
-      type="button"
+    <a
+      href={path(locale, `${item.slug}/`)}
       className={`card ${playing ? 'is-playing' : ''}`}
       style={{ '--card-accent': item.accent } as React.CSSProperties}
       onMouseEnter={start}
@@ -62,8 +81,8 @@ export default function CaseCard({ item, onOpen }: Props) {
       onMouseLeave={stop}
       onFocus={start}
       onBlur={stop}
-      onClick={() => onOpen(item.slug)}
-      aria-label={`${item.marque} ${item.model} — open details`}
+      onClick={openHere}
+      aria-label={copy.card.open(item.marque, item.model)}
     >
       <span className="card__shellbadge">
         <span
@@ -104,12 +123,12 @@ export default function CaseCard({ item, onOpen }: Props) {
         <span className="card__caption">{item.caption}</span>
 
         <span className="card__foot">
-          <span className="card__price">{formatPrice()}</span>
+          <span className="card__price">{formatPrice(copy)}</span>
           <span className="card__cta">
-            Details <ArrowRight />
+            {copy.card.details} <ArrowRight />
           </span>
         </span>
       </span>
-    </button>
+    </a>
   );
 }

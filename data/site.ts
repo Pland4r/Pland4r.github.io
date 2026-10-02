@@ -1,3 +1,5 @@
+import { path, type Copy } from './i18n';
+
 /* ---------------------------------------------------------------------------
    MA Cases — site-wide settings.
    Everything a non-developer needs to change lives in this one file.
@@ -9,6 +11,15 @@ export const site = {
   tagline: 'Automotive phone cases',
   description:
     'A curated collection of automotive-art phone cases. Real product photography, no renders.',
+
+  /**
+   * Where the site actually lives. Used for the canonical link, the sitemap,
+   * and the picture a shared link shows — those have to be absolute URLs, so
+   * a wrong value here means link previews point at the wrong host.
+   *
+   * No trailing slash.
+   */
+  url: 'https://ma-cases.pages.dev',
 
   /** Currency shown next to every price. */
   currency: 'DH',
@@ -27,6 +38,16 @@ export const site = {
    * models you may not stock.
    */
   models: [] as string[],
+
+  /**
+   * Cloudflare Web Analytics token, from the dashboard under Analytics > Web
+   * Analytics > your site > Manage site. Empty means no analytics script is
+   * loaded at all — not a disabled one, none.
+   *
+   * That service rather than the usual one because it sets no cookies and
+   * stores nothing about a visitor, so the site needs no consent banner.
+   */
+  analytics: '',
 
   /** Optional: fill these in and they appear in the contact section + footer. */
   contact: {
@@ -62,6 +83,33 @@ export const site = {
   },
 };
 
-export function formatPrice(): string {
-  return site.price === null ? 'Price on request' : `${site.price} ${site.currency}`;
+export function formatPrice(copy: Copy): string {
+  return site.price === null
+    ? copy.sheet.priceOnRequest
+    : `${site.price} ${site.currency}`;
+}
+
+
+/**
+ * A WhatsApp chat with the message already written.
+ *
+ * Without this the button opens an empty chat, and an empty chat is where an
+ * order goes to die: the customer has to describe which case they meant, so
+ * most send "hello" and wait, and you are left asking which one. Pre-filling it
+ * means the case and its link arrive with the first message.
+ *
+ * Returns null when there is no number yet, and the caller falls back to
+ * scrolling to the contact section.
+ */
+export function enquiryLink(
+  copy: Copy,
+  item?: { marque: string; model: string; slug: string },
+): string | null {
+  if (!site.contact.whatsapp) return null;
+
+  const text = item
+    ? copy.enquiry(`${item.marque} ${item.model}`, `${site.url}${path(copy.locale, item.slug + '/')}`)
+    : copy.enquiryGeneral;
+
+  return `https://wa.me/${site.contact.whatsapp}?text=${encodeURIComponent(text)}`;
 }

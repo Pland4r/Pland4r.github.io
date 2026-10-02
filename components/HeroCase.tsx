@@ -2,9 +2,10 @@
 
 import { useCallback, useRef, useState } from 'react';
 import type { Case } from '@/data/cases';
+import { getCopy, type Locale } from '@/data/i18n';
 import { rev } from '@/data/rev';
 
-type Props = { item: Case };
+type Props = { item: Case; locale: Locale };
 
 type Ripple = { id: number; x: number; y: number };
 
@@ -18,7 +19,8 @@ const SPIN_MS = 820;
  * The sheet is owned by <Collection>, so rather than lifting that state into a
  * context for one interaction, the open request goes out as a DOM event.
  */
-export default function HeroCase({ item }: Props) {
+export default function HeroCase({ item, locale }: Props) {
+  const copy = getCopy(locale);
   const [ripples, setRipples] = useState<Ripple[]>([]);
   const [spinning, setSpinning] = useState(false);
   const seq = useRef(0);
@@ -50,7 +52,7 @@ export default function HeroCase({ item }: Props) {
       type="button"
       className={`herocase ${spinning ? 'is-spinning' : ''}`}
       onClick={burst}
-      aria-label={`${item.marque} ${item.model} — open details`}
+      aria-label={copy.card.open(item.marque, item.model)}
     >
       <span className="herocase__inner">
         <img
@@ -74,7 +76,7 @@ export default function HeroCase({ item }: Props) {
         </span>
       ))}
 
-      <span className="herocase__hint">Tap it</span>
+      <span className="herocase__hint">{copy.hero.tap}</span>
     </button>
   );
 }

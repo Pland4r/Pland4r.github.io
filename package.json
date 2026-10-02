@@ -9,7 +9,8 @@
     "lint": "next lint",
     "assets": "python scripts/assets.py",
     "assets:images": "python scripts/assets.py images",
-    "assets:video": "python scripts/assets.py video"
+    "assets:video": "python scripts/assets.py video",
+    "check": "python scripts/check.py"
   },
   "dependencies": {
     "next": "^15.5.4",

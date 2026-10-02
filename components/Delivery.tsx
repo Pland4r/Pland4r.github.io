@@ -1,3 +1,4 @@
+import { getCopy, type Locale } from '@/data/i18n';
 import { site } from '@/data/site';
 import Reveal from './Reveal';
 
@@ -6,44 +7,50 @@ import Reveal from './Reveal';
  * not shown, so the page never promises a delivery time or a fee that has not
  * been decided.
  */
-export default function Delivery() {
+export default function Delivery({ locale }: { locale: Locale }) {
+  const copy = getCopy(locale);
   const d = site.delivery;
+  const country = copy.countryName(d.country);
+  const named = d.cities.length > 0;
 
-  const points: { n: string; title: string; body: string }[] = [
+  const points: { key: string; label: string; title: string; body: string }[] = [
     {
-      n: 'Where',
-      title: d.cities.length > 0 ? d.cities.slice(0, 3).join(' · ') : `All of ${d.country}`,
-      body:
-        d.cities.length > 0
-          ? `We deliver to ${d.cities.join(', ')}. Somewhere else in ${d.country}? Ask us.`
-          : `We ship anywhere in ${d.country}. Tell us your city and we will confirm.`,
+      key: 'where',
+      label: copy.delivery.where,
+      title: named ? d.cities.slice(0, 3).join(' · ') : copy.delivery.allOf(country),
+      body: named
+        ? copy.delivery.weDeliverTo(d.cities.join(', '), country)
+        : copy.delivery.shipAnywhere(country),
     },
   ];
 
   if (d.cashOnDelivery) {
     points.push({
-      n: 'Payment',
-      title: 'Cash on delivery',
-      body: 'Pay the courier when the case reaches you. Nothing up front, no card needed.',
+      key: 'payment',
+      label: copy.delivery.payment,
+      title: copy.delivery.cashOnDelivery,
+      body: copy.delivery.cashOnDeliveryBody,
     });
   }
 
   if (d.time) {
     points.push({
-      n: 'How long',
+      key: 'time',
+      label: copy.delivery.howLong,
       title: d.time,
-      body: `Typical delivery time once your order is confirmed.`,
+      body: copy.delivery.howLongBody,
     });
   }
 
   if (d.fee !== null) {
     points.push({
-      n: 'Shipping',
+      key: 'fee',
+      label: copy.delivery.shipping,
       title: `${d.fee} ${site.currency}`,
       body:
         d.freeOver !== null
-          ? `Flat rate anywhere in ${d.country}. Free over ${d.freeOver} ${site.currency}.`
-          : `Flat rate anywhere in ${d.country}.`,
+          ? copy.delivery.flatRateFreeOver(country, `${d.freeOver} ${site.currency}`)
+          : copy.delivery.flatRate(country),
     });
   }
 
@@ -52,22 +59,17 @@ export default function Delivery() {
       <div className="wrap">
         <div className="sec-head">
           <Reveal className="sec-head__text">
-            <p className="eyebrow">Delivery</p>
-            <h2 className="h1">
-              Anywhere in {d.country}.
-            </h2>
-            <p className="lede">
-              Message us with the case and your phone model. We confirm availability
-              and price first — you only commit once you know both.
-            </p>
+            <p className="eyebrow">{copy.delivery.eyebrow}</p>
+            <h2 className="h1">{copy.delivery.heading(country)}</h2>
+            <p className="lede">{copy.delivery.lede}</p>
           </Reveal>
         </div>
 
         <div className="feats">
           {points.map((p, i) => (
-            <Reveal key={p.n} delay={i * 80}>
+            <Reveal key={p.key} delay={i * 80}>
               <article className="feat">
-                <p className="feat__n mono">{p.n.toUpperCase()}</p>
+                <p className="feat__n mono">{p.label.toUpperCase()}</p>
                 <h3>{p.title}</h3>
                 <p>{p.body}</p>
               </article>

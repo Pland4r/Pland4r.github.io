@@ -664,10 +664,13 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .card {
   position: relative;
   display: flex;
+  /* It is an <a> so it can be copied and crawled, not so it looks like one. */
+  text-decoration: none;
+  color: inherit;
   flex-direction: column;
   width: 100%;
   height: 100%;
-  text-align: left;
+  text-align: start;
   border: 1px solid var(--line-2);
   border-radius: var(--r-lg);
   background: var(--elev);
@@ -941,7 +944,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 }
 
 .speclist dt { color: var(--dim); }
-.speclist dd { margin: 0; text-align: right; letter-spacing: -0.012em; font-weight: 520; }
+.speclist dd { margin: 0; text-align: end; letter-spacing: -0.012em; font-weight: 520; }
 
 .printed { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
 
@@ -1108,7 +1111,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .themetoggle__thumb {
   position: absolute;
   top: 2px;
-  left: 2px;
+  inset-inline-start: 2px;
   width: 22px;
   height: 22px;
   border-radius: 50%;
@@ -1152,7 +1155,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 
 .totop {
   position: fixed;
-  right: clamp(16px, 3vw, 32px);
+  inset-inline-end: clamp(16px, 3vw, 32px);
   bottom: clamp(16px, 3vw, 32px);
   z-index: 45;
   width: 44px;
@@ -1226,7 +1229,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   justify-content: space-between;
   gap: 24px;
   padding: 22px 4px;
-  text-align: left;
+  text-align: start;
   letter-spacing: -0.018em;
   color: var(--fg);
   transition: color 0.25s var(--ease);
@@ -1700,7 +1703,10 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
    ======================================================================= */
 
 @media (pointer: coarse) {
-  .viewtabs button { padding: 11px 17px; }
+  /* 11px of padding left these at 40px, which is under the 44 every other
+     control on a touch screen gets — and on a case page they are now the
+     primary control rather than something inside an opened sheet. */
+  .viewtabs button { padding: 11px 17px; min-height: 44px; }
   /* The switch stays visually small; the hit area around it does not. */
   .themetoggle { min-height: 44px; }
   .nav__links a:not(.btn) { padding-block: 12px; }
@@ -1718,4 +1724,167 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   .card__marque { font-size: 0.72rem; }
   .card__shellbadge { font-size: 0.7rem; }
   .eyebrow { font-size: 0.74rem; }
+}
+
+/* --------------------------------------------------------- a case on its own page
+
+   Same detail block as the sheet, without a dialog around it. It keeps the
+   panel's frame so a visitor arriving from a shared link and one who opened the
+   sheet are looking at the same object, not two designs of it. */
+
+.casepage {
+  padding-top: clamp(96px, 14vh, 150px);
+}
+
+.casepage__panel {
+  position: relative;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-lg);
+  background: var(--elev);
+  box-shadow: var(--shadow-card);
+  padding: clamp(14px, 2.4vw, 26px);
+  margin-top: 18px;
+}
+
+.casepage__back,
+.casepage__more {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.92rem;
+  font-weight: 560;
+  letter-spacing: -0.01em;
+  transition: color 0.3s var(--ease), gap 0.3s var(--ease);
+}
+
+.casepage__back:hover,
+.casepage__more:hover {
+  color: var(--fg);
+  gap: 12px;
+}
+
+.casepage__more {
+  margin-top: 26px;
+}
+
+/* The page has no scrim behind it, so the media stage needs its own ground. */
+.casepage .sheet__media {
+  background: var(--bg-2);
+}
+
+@media (pointer: coarse) {
+  .casepage__back,
+  .casepage__more {
+    min-height: 44px;
+  }
+}
+
+
+/* ------------------------------------------------------------------- Arabic
+
+   The layout mirrors itself: the rules above use logical properties, so
+   `text-align: start` and `inset-inline-end` already follow the writing
+   direction without a second copy of each rule. What is left here is the
+   handful of things that cannot be expressed that way. */
+
+/* Inter has no Arabic glyphs, so without this the page falls back to whatever
+   the device happens to have — which on Windows is a face that sits at a
+   different weight and height from the rest of the site. */
+[lang='ar'],
+[lang='ar'] .mono {
+  font-family: var(--font-arabic), var(--font-sans), system-ui, sans-serif;
+  /* Arabic script carries more vertical detail; it needs the room. */
+  line-height: 1.75;
+}
+
+/* The toggle slides the other way when the track is mirrored. */
+[dir='rtl'] .themetoggle__thumb[data-dark] { transform: translateX(-24px); }
+
+@media (max-width: 720px) {
+  [dir='rtl'] .themetoggle__thumb[data-dark] { transform: translateX(-20px); }
+}
+
+/* Display type set in Latin — the marque names, the ticker, the step numbers —
+   stays left-to-right inside a right-to-left page. */
+[dir='rtl'] .ticker,
+[dir='rtl'] .card__marque,
+[dir='rtl'] .hero__meta dd {
+  direction: ltr;
+  text-align: start;
+}
+
+/* The language switcher. Compact, because it sits beside the theme toggle in a
+   header that is already full on a phone. */
+.langs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--line-2);
+  border-radius: 999px;
+  background: var(--bg-2);
+}
+
+.langs a {
+  padding: 5px 9px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 560;
+  letter-spacing: -0.005em;
+  color: var(--muted);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.3s var(--ease), color 0.3s var(--ease);
+}
+
+.langs a:hover { color: var(--fg); }
+
+.langs a[aria-current] {
+  background: var(--bg);
+  color: var(--fg);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+/* Below the breakpoint the switcher moves into the burger panel, where there is
+   room to show the languages by name rather than squeezed into the header. */
+@media (max-width: 860px) {
+  .langs { display: none; }
+}
+
+.navpanel__langs {
+  display: flex;
+  gap: 8px;
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line-2);
+}
+
+.navpanel__langs a {
+  padding: 10px 14px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--line-2);
+  border-radius: 999px;
+  font-size: 0.85rem;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.navpanel__langs a[aria-current] {
+  border-color: var(--accent);
+  color: var(--fg);
+}
+
+@media (min-width: 861px) {
+  .navpanel__langs { display: none; }
+}
+
+/* An arrow that means "onward" has to point the other way when the page does. */
+[dir='rtl'] .btn svg,
+[dir='rtl'] .card__cta svg,
+[dir='rtl'] .casepage__more svg {
+  transform: scaleX(-1);
 }

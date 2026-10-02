@@ -11,6 +11,7 @@ Turns the raw product photos in /pic into everything the site serves:
     public/video/<slug>.mp4          6s looping product clip + poster
     public/video/hero.mp4            hero banner loop + poster
     public/video/dark/...            the same clips on a dark stage
+    public/og/<slug>.jpg             1200x630 link-preview card
 
 The cut-out only ever removes the studio background — the printed artwork is
 never touched, resized against its shell, or recoloured.
@@ -48,6 +49,7 @@ CLEAN = os.path.join(SRC, "clean")
 CASES = os.path.join(ROOT, "public", "cases")
 PHOTO = os.path.join(CASES, "photo")
 VIDEO = os.path.join(ROOT, "public", "video")
+OG = os.path.join(ROOT, "public", "og")
 
 FPS = 30
 
@@ -487,11 +489,94 @@ def cutout(path: str, tol: int = 246, feather: float = 1.2) -> Image.Image:
     )
 
 
-def _fresh(target: str, source: str) -> bool:
-    """True when `target` already exists and is newer than the photo."""
-    return (
-        os.path.exists(target)
-        and os.path.getmtime(target) >= os.path.getmtime(source)
+SOURCES = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".sources.json")
+
+_sources: dict[str, str] | None = None
+
+
+def _digest(path: str) -> str:
+    h = hashlib.sha1()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def _recipe(sources: tuple[str, ...]) -> str:
+    """One hash standing for everything an output was built from."""
+    h = hashlib.sha1()
+    for path in sources:
+        h.update(_digest(path).encode() if os.path.exists(path) else b"-")
+    return h.hexdigest()
+
+
+def _key(target: str) -> str:
+    return os.path.relpath(target, ROOT).replace(chr(92), "/")
+
+
+def _fresh(target: str, *sources: str) -> bool:
+    """
+    True when `target` was built from exactly these sources.
+
+    Deliberately not mtimes. A CI checkout writes every file's timestamp at
+    clone time in no meaningful order, so comparing them there is a coin toss:
+    one run decides all twenty-eight clips are stale and spends minutes
+    re-encoding video that was already correct, the next decides none are. What
+    is recorded instead is a hash of what each output was built from, which a
+    checkout cannot disturb.
+    """
+    global _sources
+    if _sources is None:
+        try:
+            with open(SOURCES, encoding="utf-8") as f:
+                _sources = json.load(f)
+        except (OSError, ValueError):
+            _sources = {}
+    return os.path.exists(target) and _sources.get(_key(target)) == _recipe(sources)
+
+
+def _remember(target: str, *sources: str) -> None:
+    """Record what `target` was just built from, for the next run to check."""
+    _fresh(target, *sources)          # loads the file if it is not loaded yet
+    assert _sources is not None
+    _sources[_key(target)] = _recipe(sources)
+
+
+def _save_sources() -> None:
+    """Write the record back, dropping rows whose output is no longer there."""
+    if _sources is None:
+        return
+    rows = {k: v for k, v in _sources.items() if os.path.exists(os.path.join(ROOT, k))}
+    with open(SOURCES, "w", encoding="utf-8") as f:
+        json.dump(rows, f, indent=2, sort_keys=True)
+        f.write(chr(10))
+
+
+def og_card(slug: str, accent_hex: str, w: int = 1200, h: int = 630) -> None:
+    """
+    The picture a link to this case shows when it is pasted somewhere.
+
+    1200x630 because that is the size Facebook, WhatsApp and the rest crop to,
+    and JPEG because their scrapers are unreliable with WebP — a preview that
+    silently fails to render is worse than a plain one. No text on it: the
+    marque and model travel as og:title beside the image, and burning them in
+    would mean shipping a font and hoping it exists on the runner.
+    """
+    accent = tuple(int(accent_hex[i:i + 2], 16) for i in (1, 3, 5))
+    case = _load(slug, int(h * 0.86))
+    cw, ch = case.size
+    rgb = np.asarray(case).astype(np.float32)[:, :, :3]
+    alpha = np.asarray(case)[:, :, 3]
+
+    ox, oy = (w - cw) // 2, (h - ch) // 2
+    frame = _backdrop(w, h, accent, dark=False)
+    frame -= _shadow(alpha, w, h, ox, oy + 40, 0.38, 60)
+    frame -= _shadow(alpha, w, h, ox, oy + 20, 0.30, 22)
+    frame = _composite(frame, rgb, alpha, ox, oy, w, h)
+
+    os.makedirs(OG, exist_ok=True)
+    Image.fromarray(np.clip(frame, 0, 255).astype(np.uint8)).save(
+        os.path.join(OG, f"{slug}.jpg"), quality=86, optimize=True
     )
 
 
@@ -511,7 +596,7 @@ def build_images(force: bool = False) -> list[dict]:
         art = meta["clean"] or src
         png = os.path.join(CASES, f"{slug}.png")
 
-        if force or not _fresh(png, src) or not _fresh(png, art):
+        if force or not _fresh(png, src, art):
             out = clean_cutout(art) if meta["clean"] else cutout(src)
             out.save(png, optimize=True)
             out.save(os.path.join(CASES, f"{slug}.webp"), quality=92, method=6)
@@ -523,12 +608,21 @@ def build_images(force: bool = False) -> list[dict]:
             Image.open(src).convert("RGB").save(
                 os.path.join(PHOTO, f"{slug}.webp"), quality=90, method=6
             )
+            _remember(png, src, art)
             note = "own alpha" if meta["clean"] else "cut out"
         else:
             out = Image.open(png).convert("RGBA")
             note = "up to date"
 
         swatch, shell_label = shell_of(out)
+        accent = accent_of(out)
+
+        # The link-preview card is keyed off the cut-out, not the photo, so it
+        # follows a re-cut as well as a new photo.
+        if force or not _fresh(os.path.join(OG, f"{slug}.jpg"), png):
+            og_card(slug, accent)
+            _remember(os.path.join(OG, f"{slug}.jpg"), png)
+
         entries.append({
             "slug": slug,
             "file": meta["file"],
@@ -538,7 +632,7 @@ def build_images(force: bool = False) -> list[dict]:
             "variant": meta["variant"],
             "shellLabel": shell_label,
             "swatch": swatch,
-            "accent": accent_of(out),
+            "accent": accent,
         })
         flag = "" if meta["named"] else "  NEEDS A NAME"
         print(f"  {slug:26s} {out.size[0]:>4}x{out.size[1]:<5} {shell_label:<12} {note}{flag}")
@@ -566,6 +660,7 @@ def prune(keep: set[str]) -> None:
         (PHOTO, ("{s}.webp",)),
         (VIDEO, ("{s}.mp4", "{s}-poster.webp")),
         (os.path.join(VIDEO, "dark"), ("{s}.mp4", "{s}-poster.webp")),
+        (OG, ("{s}.jpg",)),
     ]
     known = {p.format(s=slug) for _, pats in targets for pat in pats for slug in keep
              for p in [pat]}
@@ -824,22 +919,22 @@ def build_video(only: list[str] | None = None) -> None:
                 continue
             print(f"  clip  {label:5s} {slug}", flush=True)
             product_clip(slug, e["accent"], dark=dark)
+            _remember(clip, src)
             rendered += 1
 
         # The hero is a band of every case, so it only needs rebuilding when the
         # set changed. Without this a code-only push pays three minutes to
         # re-render a video identical to the one already published.
         hero = os.path.join(out_dir, "hero.mp4")
-        newest = max(
-            (os.path.getmtime(os.path.join(CASES, f"{e['slug']}.png")) for e in entries),
-            default=0,
-        )
-        if not rendered and os.path.exists(hero) and os.path.getmtime(hero) >= newest:
+        # Every case, not just the ones asked for — the band contains all of them.
+        every = tuple(os.path.join(CASES, f"{c['slug']}.png") for c in catalogue())
+        if not rendered and _fresh(hero, *every):
             print(f"  hero  {label} — up to date", flush=True)
             continue
 
         print(f"  hero  {label}", flush=True)
         hero_clip(dark=dark)
+        _remember(hero, *every)
 
 
 def stamp() -> dict:
@@ -884,6 +979,7 @@ def stamp() -> dict:
                 os.path.join(VIDEO, f"{slug}-poster.webp"),
                 os.path.join(VIDEO, "dark", f"{slug}.mp4"),
                 os.path.join(VIDEO, "dark", f"{slug}-poster.webp"),
+                os.path.join(OG, f"{slug}.jpg"),
             ])
 
     with open(REV, "w", encoding="utf-8") as f:
@@ -906,5 +1002,6 @@ if __name__ == "__main__":
         build_video(only=[a for a in sys.argv[2:] if not a.startswith("-")] or None)
 
     stamp()
+    _save_sources()
     print("  -> data/rev.json")
     print("done")

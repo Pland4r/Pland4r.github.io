@@ -1,8 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { getCopy, type Locale } from '@/data/i18n';
 
-export default function BackToTop() {
+export default function BackToTop({ locale }: { locale: Locale }) {
+  const copy = getCopy(locale);
   const [show, setShow] = useState(false);
 
   useEffect(() => {
@@ -17,7 +19,7 @@ export default function BackToTop() {
       type="button"
       className={`totop ${show ? 'is-in' : ''}`}
       onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-      aria-label="Back to top"
+      aria-label={copy.backToTop}
       tabIndex={show ? 0 : -1}
     >
       <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">

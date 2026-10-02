@@ -1,43 +1,29 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import type { Case } from '@/data/cases';
-import { formatPrice, site } from '@/data/site';
+import { getCopy, type Locale } from '@/data/i18n';
+import CaseDetail from './CaseDetail';
 import { Close } from './Icons';
-import TiltView from './TiltView';
-import { useTheme } from './useTheme';
-import { rev } from '../data/rev';
 
 type Props = {
   item: Case;
   onClose: () => void;
+  locale: Locale;
 };
 
-type View = 'motion' | 'tilt' | 'photo';
-
-const VIEWS: { id: View; label: string }[] = [
-  { id: 'motion', label: 'Motion' },
-  { id: 'tilt', label: '3D' },
-  { id: 'photo', label: 'Real photo' },
-];
-
-const NOTES: Record<View, string> = {
-  motion:
-    'The motion view is this case’s own photograph lit on a studio background. The artwork itself is never altered.',
-  tilt:
-    'The 3D view is this case’s own photograph at full resolution, turned left and right. Nothing is redrawn or re-rendered.',
-  photo: 'This is the original, unedited photograph of this exact case.',
-};
-
-export default function CaseSheet({ item, onClose }: Props) {
-  const [view, setView] = useState<View>('motion');
+/**
+ * A case opened over the collection.
+ *
+ * Only the dialog lives here — the scrim, the close button, the focus trap and
+ * the body lock. What is inside it is `CaseDetail`, which the case's own page
+ * at /<slug>/ renders too, so browsing and being sent a link show the same
+ * thing.
+ */
+export default function CaseSheet({ item, onClose, locale }: Props) {
+  const copy = getCopy(locale);
   const closeRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
-  const { theme } = useTheme();
-  const clipDir = theme === 'dark' ? '/video/dark' : '/video';
-
-  // Reset to the motion view whenever a different case is opened.
-  useEffect(() => setView('motion'), [item.slug]);
 
   useEffect(() => {
     const restoreTo = document.activeElement as HTMLElement | null;
@@ -89,106 +75,11 @@ export default function CaseSheet({ item, onClose }: Props) {
       <div className="sheet__scrim" onClick={onClose} />
 
       <div className="sheet__panel" ref={panelRef}>
-        <button ref={closeRef} type="button" className="sheet__close" onClick={onClose} aria-label="Close">
+        <button ref={closeRef} type="button" className="sheet__close" onClick={onClose} aria-label={copy.sheet.close}>
           <Close />
         </button>
 
-        <div className="sheet__grid">
-          <div>
-            <div className={`sheet__media ${view === 'tilt' ? 'sheet__media--bare' : ''}`}>
-              {view === 'motion' ? (
-                <video
-                  key={`${item.slug}-${theme}`}
-                  src={`${clipDir}/${item.slug}.mp4${rev(item.slug)}`}
-                  poster={`${clipDir}/${item.slug}-poster.webp${rev(item.slug)}`}
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  preload="metadata"
-                />
-              ) : view === 'tilt' ? (
-                <TiltView item={item} />
-              ) : (
-                <img
-                  className="is-photo"
-                  src={`/cases/photo/${item.slug}.webp${rev(item.slug)}`}
-                  alt={`Unretouched photograph of the ${item.marque} ${item.model} case`}
-                />
-              )}
-            </div>
-
-            <div className="viewtabs" role="group" aria-label="Choose a view">
-              {VIEWS.map((v) => (
-                <button
-                  key={v.id}
-                  type="button"
-                  aria-pressed={view === v.id}
-                  onClick={() => setView(v.id)}
-                >
-                  {v.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="sheet__info">
-            <div style={{ display: 'grid', gap: 10 }}>
-              <p className="eyebrow">{item.marque}</p>
-              <h2 className="h2">{item.model}</h2>
-              {item.blurb ? (
-                <p className="lede" style={{ fontSize: '0.95rem' }}>
-                  {item.blurb}
-                </p>
-              ) : null}
-            </div>
-
-            <dl className="speclist">
-              <div>
-                <dt>Marque</dt>
-                <dd>{item.marque}</dd>
-              </div>
-              <div>
-                <dt>Model</dt>
-                <dd>{item.model}</dd>
-              </div>
-              <div>
-                <dt>Shell</dt>
-                <dd>{item.shellLabel}</dd>
-              </div>
-              {item.caption ? (
-                <div>
-                  <dt>Artwork</dt>
-                  <dd>{item.caption}</dd>
-                </div>
-              ) : null}
-              <div>
-                <dt>Price</dt>
-                <dd>{formatPrice()}</dd>
-              </div>
-            </dl>
-
-            {item.printed && item.printed.length > 0 ? (
-              <div style={{ display: 'grid', gap: 12 }}>
-                <p className="eyebrow">On the case</p>
-                <ul className="printed">
-                  {item.printed.map((line) => (
-                    <li key={line}>{line}</li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-
-            <a href="#contact" className="btn btn--primary" onClick={onClose}>
-              Ask about this case
-            </a>
-
-            <p className="footer__note" style={{ margin: 0 }}>
-              {NOTES[view]}
-              {site.contact.city ? ` Shipping from ${site.contact.city}.` : ''}
-            </p>
-          </div>
-        </div>
+        <CaseDetail item={item} locale={locale} askHref="#contact" onAsk={onClose} />
       </div>
     </div>
   );

@@ -45,6 +45,10 @@ jobs:
       - name: Build product assets
         run: python -u scripts/assets.py
 
+      # Every rule in here is one that has already shipped broken once.
+      - name: Check the assets
+        run: python scripts/check.py
+
       - name: Commit any new assets
         run: |
           if [ -z "$(git status --porcelain)" ]; then

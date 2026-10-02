@@ -12,7 +12,8 @@
    --------------------------------------------------------------------------- */
 
 import generated from './generated.json';
-import { overrides } from './overrides';
+import { DEFAULT_LOCALE, type Locale } from './i18n';
+import { overrides, pick } from './overrides';
 
 export type Case = {
   slug: string;
@@ -33,22 +34,41 @@ export type Case = {
   printed?: string[];
 };
 
-type Generated = Omit<Case, 'caption'> & { named: boolean };
+type Generated = Omit<Case, 'caption' | 'blurb' | 'printed'> & { named: boolean };
 
-export const cases: Case[] = (generated as Generated[])
-  // A photo with no name yet is fully rendered but held back: showing it under
-  // a guessed model is worse than not showing it at all.
-  .filter((g) => g.named)
-  .map((g) => {
-    const o = overrides[g.slug] ?? {};
-    return {
-      ...g,
-      shellLabel: o.shellLabel ?? g.shellLabel,
-      accent: o.accent ?? g.accent,
-      caption: o.caption ?? g.variant,
-      blurb: o.blurb,
-      printed: o.printed,
-    };
-  });
+/**
+ * The collection in one language.
+ *
+ * A description with no translation yet falls back to English rather than
+ * disappearing, so a case is never silently blank in French or Arabic — it is
+ * visibly still in English, which is the state you want to be able to see.
+ */
+export function collection(locale: Locale = DEFAULT_LOCALE): Case[] {
+  return (generated as Generated[])
+    // A photo with no name yet is fully rendered but held back: showing it
+    // under a guessed model is worse than not showing it at all.
+    .filter((g) => g.named)
+    .map((g) => {
+      const o = overrides[g.slug] ?? {};
+      return {
+        ...g,
+        shellLabel: o.shellLabel ?? g.shellLabel,
+        accent: o.accent ?? g.accent,
+        caption: o.caption ?? g.variant,
+        blurb: pick(o.blurb, locale),
+        printed: pick(o.printed, locale),
+      };
+    });
+}
 
-export const getCase = (slug: string) => cases.find((c) => c.slug === slug);
+/**
+ * The English collection.
+ *
+ * Kept for everything that only needs the parts a photo gives — the slugs for
+ * `generateStaticParams`, the marque list, the count — none of which change
+ * with language.
+ */
+export const cases: Case[] = collection();
+
+export const getCase = (slug: string, locale: Locale = DEFAULT_LOCALE) =>
+  collection(locale).find((c) => c.slug === slug);

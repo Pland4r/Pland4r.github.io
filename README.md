@@ -34,15 +34,142 @@ Everything a non-developer needs to change is in **`data/site.ts`**:
 
    `whatsapp` is digits only with the country code, e.g. `212600000000`.
 
-3. **Phone models.** `models` is an empty list, so the Fit section shows a
+3. **Analytics.** `analytics` takes a Cloudflare Web Analytics token
+   (dashboard → Analytics → Web Analytics → Manage site). Empty means no
+   script is loaded at all, not a disabled one. It is that service because it
+   sets no cookies, so the site needs no consent banner.
+
+4. **Phone models.** `models` is an empty list, so the Fit section shows a
    simple “tell us your phone” flow instead of promising handsets you may not
    stock. Add them (e.g. `['iPhone 15', 'iPhone 15 Pro']`) and it turns into a
    list.
 
-4. **Delivery.** `delivery` drives the Delivery section and two FAQ answers.
+5. **Delivery.** `delivery` drives the Delivery section and two FAQ answers.
    Add `cities` and it names them; leave it empty and it says “anywhere in
    Morocco”. Set `time` (e.g. `'24–72h'`), `fee` and `freeOver` and those lines
    appear — leave them and nothing is promised. `cashOnDelivery` is on.
+
+## How an order arrives
+
+There is no checkout. With `contact.whatsapp` set, **Order on WhatsApp** on a
+case opens a chat with the message already written:
+
+> Hello! I am interested in the Bugatti Chiron Pur Sport case.
+> https://ma-cases.pages.dev/bugatti-chiron-pur-sport/
+
+An empty chat is where an order goes to die — the customer has to describe
+which case they meant, so most send “hello” and wait, and you are left asking
+which one. The case and its link arriving with the first message is the whole
+point. `ENQUIRY` and `ENQUIRY_GENERAL` in `data/site.ts` are the wording, and
+they are the first lines to change when the site is translated.
+
+With no number set the button falls back to scrolling to the contact section,
+which says the order line is still being set up. Nothing has to be switched on.
+
+## Two ways to reach a case
+
+The collection is one page, and tapping a case opens a sheet over it. That is a
+good way to browse and a useless thing to send someone — the address bar never
+changes, so *“here is the Chiron”* could only ever be a link to the whole site.
+
+So every case also has its own page:
+
+```
+https://ma-cases.pages.dev/bugatti-chiron-pur-sport/
+```
+
+Both show the same thing: `components/CaseDetail.tsx` is the three views and
+the spec column, and it is shared rather than copied, so the page a customer is
+sent and the sheet they browse cannot drift apart. `app/[slug]/page.tsx` writes
+one page per case at build time from `cases`, so a new photo gets a page, a
+sitemap entry and a link preview without anyone adding it to a list.
+
+The cards in the grid are real `<a>` links to those pages. A plain click is
+intercepted and opens the sheet instead, but a ctrl/cmd-click, a middle click
+and *Copy link address* all still do what they should — which is the entire
+point of them being links.
+
+### What a shared link looks like
+
+`scripts/assets.py` renders **`public/og/<slug>.jpg`**, 1200×630, the case on
+the light stage. Paste a case link into WhatsApp or Instagram and that is the
+picture that comes up, with the marque and model beside it.
+
+JPEG rather than WebP because the scrapers that read these are unreliable with
+WebP, and a preview that silently fails is worse than a plain one. No text
+burned into the image — the name travels as `og:title`, and drawing text would
+mean shipping a font and hoping it exists on the CI runner.
+
+Set **`url`** in `data/site.ts` to wherever the site actually lives. It is the
+one value those previews depend on: it has to be absolute, so a wrong value
+points every preview at the wrong host.
+
+`app/sitemap.ts` and `app/robots.ts` are generated from the same list.
+
+## Three languages
+
+| | | |
+| --- | --- | --- |
+| English | `/` | the default, so it takes no prefix |
+| Français | `/fr/` | |
+| العربية | `/ar/` | right-to-left |
+
+Every word is in **`data/i18n/`** — `en.ts`, `fr.ts`, `ar.ts`, all three checked
+against one shape in `types.ts`. A language missing a line does not compile,
+because a half-translated page only looks broken to the person who speaks that
+language and not to whoever is checking.
+
+Anything that varies with a number or a name is a function rather than a string
+with a hole in it, so word order stays the translator's business. Arabic writes
+counts as figures: its numerals agree with the gender of what they count and
+invert polarity between three and ten, so spelling them out needs a different
+word for cars than for cases, and getting that wrong is more conspicuous than a
+figure.
+
+Components take a `locale` and look their own words up. They do not take the
+dictionary as a prop — half of them are server components and half are client
+ones, and a dictionary full of functions cannot cross that boundary.
+
+### Arabic
+
+`dir="rtl"` goes on a wrapper inside `<body>`, not on `<html>`: only the root
+layout renders `<html>` and it is shared by all three languages, so it cannot
+know which one is being served. The wrapper is in the served markup, so a reader
+with scripting off still gets the right direction; the boot script then mirrors
+`lang` and `dir` onto `<html>` before first paint for the scrollbar and the
+browser's own controls.
+
+The layout mirrors itself, because the stylesheet uses logical properties —
+`text-align: start`, `inset-inline-end` — rather than a second copy of each rule
+under `[dir="rtl"]`. What needed saying explicitly is in one block at the foot
+of `globals.css`: the theme toggle slides the other way, arrows that mean
+"onward" point the other way, and Latin display type stays left-to-right inside
+a right-to-left page.
+
+Inter has no Arabic glyphs, so the Arabic pages load Noto Sans Arabic. Without
+it they fall back to whatever the device happens to have, which sits at a
+different weight and height from the rest of the site.
+
+### Describing a case in three languages
+
+`blurb` and `printed` in `data/overrides.ts` are keyed by language:
+
+```ts
+blurb: {
+  en: 'BUGATTI in enormous gradient type running off both edges…',
+  fr: 'BUGATTI en énormes caractères dégradés qui débordent des deux côtés…',
+  ar: 'كلمة BUGATTI بخط متدرّج ضخم يتجاوز الحافتين…',
+},
+```
+
+Only `en` is required. A language left out **falls back to English** rather than
+disappearing, so a case is never silently blank in French or Arabic — it is
+visibly still in English, which is the state you want to be able to see.
+
+`caption` is not translated: it quotes what is printed on the case, and the case
+does not change language. Those lines, and the spec strips, carry `dir="auto"`
+so a run of Latin text inside an Arabic paragraph keeps its own direction
+instead of throwing its full stop to the wrong end.
 
 ## Themes
 
@@ -166,6 +293,18 @@ Copy that names the size of the collection — the hero counters and shell list,
 the collection heading, the Fit steps, the marque filters — is all derived from
 `cases`, so none of it goes stale.
 
+## Checking the assets
+
+```bash
+npm run check
+```
+
+Every rule in `scripts/check.py` is one that has already shipped broken once:
+a cut-out that hollowed out or grew a white apron, an edge that came out twice
+as soft as every other case, a case live in `generated.json` with a clip that
+was never rendered, an override keyed to a slug that does not exist. It runs in
+CI before anything is deployed and exits non-zero on the first failure.
+
 ## Regenerating the images and videos
 
 ```bash
@@ -173,6 +312,13 @@ npm run assets           # everything
 npm run assets:images    # stills only — fast
 npm run assets:video     # clips + hero banner — slow, a few minutes
 ```
+
+Nothing is rebuilt that does not need to be. `scripts/.sources.json` records a
+hash of what each output was built from — deliberately not timestamps, because
+a CI checkout writes every file's mtime at clone time in no meaningful order,
+so comparing those there is a coin toss: one run decides all twenty-eight clips
+are stale and spends minutes re-encoding video that was already correct, the
+next decides none are.
 
 Requires Python with `pillow numpy scipy`, and `ffmpeg` on your PATH:
 
@@ -192,6 +338,7 @@ python -m pip install pillow numpy scipy
 | `public/video/<slug>.mp4` | a 6-second looping product clip + poster |
 | `public/video/hero.mp4` | the show-reel band loop + poster |
 | `public/video/dark/…` | the same clips rendered on a dark stage |
+| `public/og/<slug>.jpg` | the 1200×630 card a shared link shows |
 
 The background is removed by flooding white inwards from the edge of the frame.
 Only white *connected to the border* goes, which is what keeps the white cases
@@ -306,6 +453,25 @@ load.
 
 Re-run with `python scripts/brand.py`. Replacing the logo by hand means dropping
 two PNGs into `public/brand/` under those names.
+
+## What loads, and when
+
+The reel under the hero is the heaviest thing on the page — around 700 KB,
+several times the HTML and the script together — and `autoPlay` fetches it
+while the page is still being parsed, in competition with the fonts and the
+case stills a visitor is actually waiting to see.
+
+So `components/ShowReel.tsx` withholds the source until the band is within a
+screen of the viewport. Measured on a throttled connection (1.6 Mbps, 150 ms
+latency), downloaded before anything appears on screen:
+
+| | before first paint |
+| --- | --- |
+| `autoPlay` + `preload="metadata"` | 1,097 KB |
+| source withheld until near | 383 KB |
+
+The poster is a still of the first frame and loads immediately, so the band is
+never an empty hole while it waits.
 
 ## The glass and water effects
 

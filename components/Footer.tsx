@@ -1,7 +1,9 @@
+import { getCopy, type Locale } from '@/data/i18n';
 import { site } from '@/data/site';
 import Logo from './Logo';
 
-export default function Footer() {
+export default function Footer({ locale }: { locale: Locale }) {
+  const copy = getCopy(locale);
   return (
     <footer className="footer">
       <div className="wrap">
@@ -13,12 +15,7 @@ export default function Footer() {
           </small>
         </div>
 
-        <p className="footer__note">
-          Product photography on this site shows the actual cases as supplied. Vehicle
-          names, model designations and marque logos appearing in the printed artwork
-          are the property of their respective manufacturers; {site.name} is not
-          affiliated with, endorsed by or sponsored by any of them.
-        </p>
+        <p className="footer__note">{copy.footer.disclaimer(site.name)}</p>
       </div>
     </footer>
   );

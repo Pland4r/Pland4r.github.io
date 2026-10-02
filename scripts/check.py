@@ -10,6 +10,8 @@ eye, and would have shipped otherwise:
     woolly next to the rest
   * a case live in generated.json with a clip that was never rendered
   * an override keyed to a slug that does not exist, silently doing nothing
+  * secondary text the light theme set at 3.3:1, which reads fine to anyone who
+    can already read it
 
     python scripts/check.py        # or: npm run check
 
@@ -76,6 +78,41 @@ def edge_ramp(alpha: np.ndarray) -> float:
     return float(np.mean(widths)) if widths else 0.0
 
 
+
+# Text at the sizes this site uses needs 4.5:1 against what it sits on. The
+# light theme's --dim was 3.32:1 once, which no one noticed because it reads
+# fine to anyone who can already read it.
+AA = 4.5
+
+# Which text colours are set on which surfaces, as the stylesheet actually uses
+# them. --dim on --bg-2 is the footer note; --muted on --elev is a card caption.
+PAIRS = [('fg', 'bg'), ('fg', 'bg-2'), ('fg', 'elev'),
+         ('muted', 'bg'), ('muted', 'bg-2'), ('muted', 'elev'),
+         ('dim', 'bg'), ('dim', 'bg-2'), ('dim', 'elev')]
+
+
+def _luminance(hex_colour: str) -> float:
+    parts = [int(hex_colour[i:i + 2], 16) / 255 for i in (1, 3, 5)]
+    lin = [c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4 for c in parts]
+    return 0.2126 * lin[0] + 0.7152 * lin[1] + 0.0722 * lin[2]
+
+
+def contrast(a: str, b: str) -> float:
+    la, lb = _luminance(a), _luminance(b)
+    hi, lo = max(la, lb), min(la, lb)
+    return (hi + 0.05) / (lo + 0.05)
+
+
+def palettes() -> dict[str, dict[str, str]]:
+    """The two `:root` blocks at the top of globals.css, as name -> hex."""
+    css = open(os.path.join(assets.ROOT, "app", "globals.css"), encoding="utf-8").read()
+    blocks = re.findall(r"(:root[^{]*)\{(.*?)\}", css, re.S)[:2]
+    out = {}
+    for i, (selector, body) in enumerate(blocks):
+        name = "dark" if "dark" in selector else ("light" if i == 0 else "dark")
+        out[name] = dict(re.findall(r"--([\w-]+):\s*(#[0-9a-fA-F]{6})", body))
+    return out
+
 def main() -> int:
     with open(assets.GENERATED, encoding="utf-8") as f:
         generated = json.load(f)
@@ -140,6 +177,17 @@ def main() -> int:
     check("live cases have a marque and a model",
           all(e["marque"] and e["model"] for e in live))
 
+    # ------------------------------------------------------------- contrast
+    print()
+    for theme, tokens in palettes().items():
+        for ink, surface in PAIRS:
+            if ink not in tokens or surface not in tokens:
+                continue
+            ratio = contrast(tokens[ink], tokens[surface])
+            check(f"{theme}: --{ink} on --{surface} is {ratio:.2f}:1", ratio >= AA,
+                  f"{tokens[ink]} on {tokens[surface]} needs {AA}:1")
+
+    print()
     for name in ("hero.mp4", "hero-poster.webp"):
         for folder in (assets.VIDEO, os.path.join(assets.VIDEO, "dark")):
             path = os.path.join(folder, name)

@@ -181,5 +181,12 @@ export type Copy = {
   enquiry: (caseName: string, link: string) => string;
   enquiryGeneral: string;
 
+  notFound: {
+    code: string;
+    heading: string;
+    lede: string;
+    cta: string;
+  };
+
   backToTop: string;
 };

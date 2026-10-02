@@ -13,10 +13,18 @@ const inter = Inter({
  * Inter has no Arabic glyphs. Without a face that does, the Arabic pages fall
  * back to whatever the device happens to have, which sits at a different weight
  * and height from the rest of the site.
+ *
+ * `preload: false` because this layout is shared by all three languages, and
+ * preloading from here put 162 KB of Arabic glyphs in the critical path of
+ * every English page — more than the rest of the fonts put together, for
+ * letters that page will never draw. Without the preload the browser honours
+ * the `unicode-range` on the face and fetches it only when Arabic text is
+ * actually on the page, which is exactly the rule we want.
  */
 const arabic = Noto_Sans_Arabic({
   subsets: ['arabic'],
   display: 'swap',
+  preload: false,
   variable: '--font-arabic',
 });
 

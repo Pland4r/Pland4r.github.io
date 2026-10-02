@@ -293,6 +293,50 @@ Copy that names the size of the collection — the hero counters and shell list,
 the collection heading, the Fit steps, the marque filters — is all derived from
 `cases`, so none of it goes stale.
 
+## When a link is wrong
+
+`app/not-found.tsx` is the page a stale link lands on. A static export has
+nothing running to route on, so it is one page for the whole site — it reads
+the language out of the address and corrects itself on hydration, which is the
+right way round: the correction is a swap of words on a page that already looks
+like the site, rather than a blank one waiting for a script. Someone whose
+Arabic link has gone stale should not be dropped into English on top of it.
+
+The collection sits underneath it. A dead end on a shop is a wasted visit, and
+this list is short enough to be the way back in.
+
+## What loads, and when
+
+The reel under the hero is the heaviest thing on the page — around 700 KB,
+several times the HTML and the script together — and `autoPlay` fetches it
+while the page is still being parsed, in competition with the fonts and the
+case stills a visitor is actually waiting to see.
+
+So `components/ShowReel.tsx` withholds the source until the band is within a
+screen of the viewport. Measured on a throttled connection (1.6 Mbps, 150 ms
+latency), downloaded before anything appears on screen:
+
+| | before first paint |
+| --- | --- |
+| `autoPlay` + `preload="metadata"` | 1,097 KB |
+| source withheld until near | 383 KB |
+
+The poster is a still of the first frame and loads immediately, so the band is
+never an empty hole while it waits.
+
+**Fonts are fetched, not preloaded, for Arabic.** Noto Sans Arabic is declared
+in the shared layout, and preloading from there put 162 KB of Arabic glyphs in
+the critical path of every English page — more than the rest of the fonts put
+together, for letters that page will never draw. With `preload: false` the
+browser honours the `unicode-range` on the face and fetches it only when Arabic
+is actually on the page.
+
+That rule has one trap worth knowing about: the language switcher spells each
+language's name in its own script, so a stylesheet rule matching bare
+`[lang="ar"]` caught that one link on every English page and pulled the whole
+font down to set a single word. The rule is scoped to `.page[lang="ar"]`
+instead, and the switcher gets the system Arabic face, which is what it is for.
+
 ## Checking the assets
 
 ```bash
@@ -302,8 +346,16 @@ npm run check
 Every rule in `scripts/check.py` is one that has already shipped broken once:
 a cut-out that hollowed out or grew a white apron, an edge that came out twice
 as soft as every other case, a case live in `generated.json` with a clip that
-was never rendered, an override keyed to a slug that does not exist. It runs in
-CI before anything is deployed and exits non-zero on the first failure.
+was never rendered, an override keyed to a slug that does not exist, and
+secondary text the light theme once set at 3.3:1 — which reads fine to anyone
+who can already read it. It runs in CI before anything is deployed and exits
+non-zero on the first failure.
+
+The contrast rule reads the two `:root` blocks straight out of `globals.css`
+and measures every ink against every surface it is set on, so the palette
+cannot drift back under 4.5:1 without the build saying so. Audited with
+axe-core at WCAG 2.1 AA across both themes, all three languages and the 404:
+no violations.
 
 ## Regenerating the images and videos
 
@@ -453,25 +505,6 @@ load.
 
 Re-run with `python scripts/brand.py`. Replacing the logo by hand means dropping
 two PNGs into `public/brand/` under those names.
-
-## What loads, and when
-
-The reel under the hero is the heaviest thing on the page — around 700 KB,
-several times the HTML and the script together — and `autoPlay` fetches it
-while the page is still being parsed, in competition with the fonts and the
-case stills a visitor is actually waiting to see.
-
-So `components/ShowReel.tsx` withholds the source until the band is within a
-screen of the viewport. Measured on a throttled connection (1.6 Mbps, 150 ms
-latency), downloaded before anything appears on screen:
-
-| | before first paint |
-| --- | --- |
-| `autoPlay` + `preload="metadata"` | 1,097 KB |
-| source withheld until near | 383 KB |
-
-The poster is a still of the first frame and loads immediately, so the band is
-never an empty hole while it waits.
 
 ## The glass and water effects
 

@@ -240,5 +240,14 @@ export const en: Copy = {
   enquiry: (caseName, link) => `Hello! I am interested in the ${caseName} case. ${link}`,
   enquiryGeneral: 'Hello! I have a question about your cases.',
 
+  notFound: {
+    code: '404',
+    heading: 'That page is not here.',
+    lede:
+      'The link may be old, or the case may have been taken down. The whole ' +
+      'collection is below — it is not a long list.',
+    cta: 'See the collection',
+  },
+
   backToTop: 'Back to top',
 };

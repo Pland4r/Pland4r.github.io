@@ -6,7 +6,14 @@
   --elev:      #ffffff;
   --fg:        #1d1d1f;
   --muted:     #6e6e73;
-  --dim:       #86868b;
+  /* Was #86868b, which measured 3.32:1 on --bg-2 and 3.62:1 on white — under
+     the 4.5:1 that text this size needs, and it is used for the footer note,
+     the spec terms and every eyebrow. Nothing lighter than this passes, so in
+     the light theme it lands on the same value as --muted: at 11-14px the
+     palette only really supports two steps of grey, and the third was one the
+     eye was not reliably getting anyway. The dark theme already passed and is
+     left alone. */
+  --dim:       #6e6e73;
   --line:      rgba(0, 0, 0, 0.11);
   --line-2:    rgba(0, 0, 0, 0.07);
   --accent:    #0071e3;
@@ -1791,9 +1798,14 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 
 /* Inter has no Arabic glyphs, so without this the page falls back to whatever
    the device happens to have — which on Windows is a face that sits at a
-   different weight and height from the rest of the site. */
-[lang='ar'],
-[lang='ar'] .mono {
+   different weight and height from the rest of the site.
+
+   Scoped to the page wrapper, not to anything carrying `lang="ar"`. The
+   language switcher sits on all three languages and spells its own name in its
+   own script, so a bare `[lang='ar']` matched that one link on every English
+   page and pulled 162 KB of Arabic glyphs down to set a single word. It gets
+   the system Arabic face instead, which is what it is for. */
+.page[lang='ar'] {
   font-family: var(--font-arabic), var(--font-sans), system-ui, sans-serif;
   /* Arabic script carries more vertical detail; it needs the room. */
   line-height: 1.75;
@@ -1887,4 +1899,28 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 [dir='rtl'] .card__cta svg,
 [dir='rtl'] .casepage__more svg {
   transform: scaleX(-1);
+}
+
+/* ---------------------------------------------------------------------- 404 */
+
+.notfound {
+  padding-top: clamp(120px, 20vh, 200px);
+  padding-bottom: clamp(40px, 7vh, 80px);
+  text-align: center;
+}
+
+.notfound .wrap {
+  display: grid;
+  justify-items: center;
+  gap: 18px;
+}
+
+.notfound .lede {
+  max-width: 46ch;
+}
+
+.notfound__code {
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  color: var(--muted);
 }

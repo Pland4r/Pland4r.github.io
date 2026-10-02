@@ -256,5 +256,14 @@ export const fr: Copy = {
     `Bonjour ! Je suis intéressé(e) par la coque ${caseName}. ${link}`,
   enquiryGeneral: 'Bonjour ! J’ai une question sur vos coques.',
 
+  notFound: {
+    code: '404',
+    heading: 'Cette page n’est pas là.',
+    lede:
+      'Le lien est peut-être ancien, ou la coque a été retirée. Toute la ' +
+      'collection est ci-dessous — la liste n’est pas longue.',
+    cta: 'Voir la collection',
+  },
+
   backToTop: 'Retour en haut',
 };

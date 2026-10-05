@@ -271,6 +271,7 @@ export const fr: Copy = {
     lede: 'Choisissez votre iPhone et dites-nous où l’envoyer. Nous confirmons avant toute fabrication.',
     yourPhone: 'Votre iPhone',
     pickPhone: 'Choisissez votre modèle',
+    changePhone: 'Changer',
     noPhone: 'Choisissez d’abord votre iPhone.',
     name: 'Nom',
     namePh: 'Votre nom complet',

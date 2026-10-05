@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import OrderForm from './OrderForm';
+import PhoneSelect from './PhoneSelect';
 import type { Case } from '@/data/cases';
 import { getCopy, type Locale } from '@/data/i18n';
 import { enquiryLink, formatPrice, site } from '@/data/site';
@@ -38,6 +39,7 @@ export default function CaseDetail({ item, locale, askHref, onAsk }: Props) {
   const clipDir = theme === 'dark' ? '/video/dark' : '/video';
   const order = enquiryLink(copy, item);
   const [ordering, setOrdering] = useState(false);
+  const [model, setModel] = useState('');
 
   // Reset to the motion view whenever a different case is shown.
   useEffect(() => setView('motion'), [item.slug]);
@@ -129,14 +131,18 @@ export default function CaseDetail({ item, locale, askHref, onAsk }: Props) {
         {/* With a number set this opens WhatsApp with the case and its link
             already written; without one it falls back to the contact section,
             which says the order line is still being set up. */}
-        {/* The form is the way to order: it collects the handset and the address
-            in one go, which a chat has to ask for one question at a time. With
-            no number and no endpoint set it falls back to the contact section,
-            so the page never offers something it cannot deliver. */}
+        {/* Which iPhone is the one question that decides whether this case
+            exists for you, so it is asked here rather than inside the form —
+            and carried across when the form opens. With no number and no
+            endpoint set the page falls back to the contact section, so it never
+            offers something it cannot deliver. */}
         {site.contact.whatsapp || site.orderEndpoint ? (
-          <button type="button" className="btn btn--primary" onClick={() => setOrdering(true)}>
-            {copy.order.cta}
-          </button>
+          <>
+            <PhoneSelect locale={locale} value={model} onChange={setModel} />
+            <button type="button" className="btn btn--primary" onClick={() => setOrdering(true)}>
+              {copy.order.cta}
+            </button>
+          </>
         ) : (
           <a href={askHref} className="btn btn--primary" onClick={onAsk}>
             {copy.sheet.ask}
@@ -150,7 +156,12 @@ export default function CaseDetail({ item, locale, askHref, onAsk }: Props) {
         ) : null}
 
         {ordering ? (
-          <OrderForm item={item} locale={locale} onClose={() => setOrdering(false)} />
+          <OrderForm
+            item={item}
+            locale={locale}
+            chosen={model}
+            onClose={() => setOrdering(false)}
+          />
         ) : null}
 
         <p className="footer__note" style={{ margin: 0 }}>

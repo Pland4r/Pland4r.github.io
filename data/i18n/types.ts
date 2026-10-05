@@ -194,6 +194,7 @@ export type Copy = {
     lede: string;
     yourPhone: string;
     pickPhone: string;
+    changePhone: string;
     noPhone: string;
     name: string;
     namePh: string;

@@ -255,6 +255,7 @@ export const en: Copy = {
     lede: 'Pick your iPhone and tell us where to send it. We confirm before anything is made.',
     yourPhone: 'Your iPhone',
     pickPhone: 'Pick your model',
+    changePhone: 'Change',
     noPhone: 'Choose your iPhone first.',
     name: 'Name',
     namePh: 'Your full name',

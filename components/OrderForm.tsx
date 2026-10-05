@@ -6,7 +6,7 @@ import { getCopy, type Locale } from '@/data/i18n';
 import { site } from '@/data/site';
 import { Close } from './Icons';
 
-type Props = { item: Case; locale: Locale; onClose: () => void };
+type Props = { item: Case; locale: Locale; chosen?: string; onClose: () => void };
 
 type State = 'filling' | 'sending' | 'sent' | 'failed';
 
@@ -25,9 +25,11 @@ type State = 'filling' | 'sending' | 'sent' | 'failed';
  * that succeeded. The confirmation screen says we will come back to confirm,
  * which is true either way, and the WhatsApp route stays one tap away.
  */
-export default function OrderForm({ item, locale, onClose }: Props) {
+export default function OrderForm({ item, locale, chosen = '', onClose }: Props) {
   const copy = getCopy(locale);
-  const [model, setModel] = useState('');
+  const [model, setModel] = useState(chosen);
+  // Already picked on the case itself, so the form shows it instead of asking again.
+  const [picking, setPicking] = useState(!chosen);
   const [state, setState] = useState<State>('filling');
   // Built at submit time and kept, because by the time the failure screen
   // renders the form is gone and there is nothing left to read the fields from.
@@ -151,6 +153,14 @@ export default function OrderForm({ item, locale, onClose }: Props) {
               <p className="lede">{copy.order.lede}</p>
             </div>
 
+            {!picking && model ? (
+              <p className="order__chosen">
+                {copy.order.yourPhone}: <b dir="ltr">{model}</b>
+                <button type="button" onClick={() => setPicking(true)}>
+                  {copy.order.changePhone}
+                </button>
+              </p>
+            ) : (
             <fieldset className="order__phones">
               <legend>
                 {copy.order.yourPhone}
@@ -165,7 +175,7 @@ export default function OrderForm({ item, locale, onClose }: Props) {
                     role="radio"
                     aria-checked={model === m}
                     className={`phonecard ${model === m ? 'is-on' : ''}`}
-                    onClick={() => setModel(m)}
+                    onClick={() => { setModel(m); setPicking(false); }}
                     // A model name is Latin either way: without this, Arabic
                     // reverses it and "18 Pro Max" reads "Pro Max 18".
                     dir="ltr"
@@ -178,6 +188,7 @@ export default function OrderForm({ item, locale, onClose }: Props) {
                 <p className="order__error" role="alert">{copy.order.noPhone}</p>
               ) : null}
             </fieldset>
+            )}
 
             <div className="order__fields">
               <label>

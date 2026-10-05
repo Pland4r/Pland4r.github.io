@@ -85,7 +85,8 @@ export const site = {
    * set up. ORDERS.md has the five-minute Google Sheet setup — free, no
    * monthly limit, never asks for a card.
    */
-  orderEndpoint: '',
+  orderEndpoint:
+    'https://script.google.com/macros/s/AKfycbxzOy61WqlvFMgfWy7bw3LGRyXLTqt38HgIuSa1u60LSCpS4WCybORjMJWVNB3nAof9eQ/exec',
 
   /**
    * Cloudflare Web Analytics token, from the dashboard under Analytics > Web

@@ -51,6 +51,20 @@ Everything a non-developer needs to change is in **`data/site.ts`**:
 
 ## How an order arrives
 
+**Order this case** opens a form: the iPhone picker, then name, phone, city and
+address. It posts to whatever `orderEndpoint` in `data/site.ts` names, and
+**ORDERS.md** sets that up as a Google Sheet — free, no monthly limit, no card.
+
+With no endpoint set the form still works. It collects everything and hands the
+finished order to WhatsApp instead, so the shop can take orders before the sheet
+exists and nothing a customer types is lost to a missing config.
+
+The handsets are `models` in `data/site.ts`, newest first. A model that is not
+on that list cannot be picked, so the form never promises a fit you do not
+stock.
+
+## And as a message
+
 There is no checkout. With `contact.whatsapp` set, **Order on WhatsApp** on a
 case opens a chat with the message already written:
 

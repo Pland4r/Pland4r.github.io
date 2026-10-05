@@ -249,5 +249,47 @@ export const en: Copy = {
     cta: 'See the collection',
   },
 
+  order: {
+    cta: 'Order this case',
+    title: 'Your order',
+    lede: 'Pick your iPhone and tell us where to send it. We confirm before anything is made.',
+    yourPhone: 'Your iPhone',
+    pickPhone: 'Pick your model',
+    noPhone: 'Choose your iPhone first.',
+    name: 'Name',
+    namePh: 'Your full name',
+    phone: 'Phone',
+    phonePh: '06 12 34 56 78',
+    city: 'City',
+    cityPh: 'Casablanca',
+    address: 'Address',
+    addressPh: 'Street, number, anything the courier needs',
+    notes: 'Anything else',
+    notesPh: 'A question, a delivery time, another case…',
+    optional: 'optional',
+    send: 'Send the order',
+    sending: 'Sending…',
+    sentTitle: 'Order received',
+    sentBody: 'We have it. We will come back to you on WhatsApp to confirm availability and price before anything is made.',
+    failTitle: 'That did not go through',
+    failBody: 'Send it on WhatsApp instead and nothing is lost — everything you typed is already in the message.',
+    viaWhatsapp: 'Send on WhatsApp',
+    close: 'Close',
+    message: (f) =>
+      `New order
+
+Case: ${f.case}
+iPhone: ${f.model}
+
+Name: ${f.name}
+Phone: ${f.phone}
+City: ${f.city}
+Address: ${f.address}` +
+      (f.notes ? `
+Notes: ${f.notes}` : '') + `
+
+${f.link}`,
+  },
+
   backToTop: 'Back to top',
 };

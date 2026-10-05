@@ -188,5 +188,38 @@ export type Copy = {
     cta: string;
   };
 
+  order: {
+    cta: string;
+    title: string;
+    lede: string;
+    yourPhone: string;
+    pickPhone: string;
+    noPhone: string;
+    name: string;
+    namePh: string;
+    phone: string;
+    phonePh: string;
+    city: string;
+    cityPh: string;
+    address: string;
+    addressPh: string;
+    notes: string;
+    notesPh: string;
+    optional: string;
+    send: string;
+    sending: string;
+    sentTitle: string;
+    sentBody: string;
+    failTitle: string;
+    failBody: string;
+    viaWhatsapp: string;
+    close: string;
+    /** The message the form hands to WhatsApp when no endpoint is set. */
+    message: (f: {
+      case: string; model: string; name: string; phone: string;
+      city: string; address: string; notes: string; link: string;
+    }) => string;
+  };
+
   backToTop: string;
 };

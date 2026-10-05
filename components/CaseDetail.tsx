@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import OrderForm from './OrderForm';
 import type { Case } from '@/data/cases';
 import { getCopy, type Locale } from '@/data/i18n';
 import { enquiryLink, formatPrice, site } from '@/data/site';
@@ -36,6 +37,7 @@ export default function CaseDetail({ item, locale, askHref, onAsk }: Props) {
   const { theme } = useTheme();
   const clipDir = theme === 'dark' ? '/video/dark' : '/video';
   const order = enquiryLink(copy, item);
+  const [ordering, setOrdering] = useState(false);
 
   // Reset to the motion view whenever a different case is shown.
   useEffect(() => setView('motion'), [item.slug]);
@@ -127,15 +129,29 @@ export default function CaseDetail({ item, locale, askHref, onAsk }: Props) {
         {/* With a number set this opens WhatsApp with the case and its link
             already written; without one it falls back to the contact section,
             which says the order line is still being set up. */}
-        {order ? (
-          <a href={order} className="btn btn--primary" target="_blank" rel="noopener noreferrer">
-            {copy.sheet.order}
-          </a>
+        {/* The form is the way to order: it collects the handset and the address
+            in one go, which a chat has to ask for one question at a time. With
+            no number and no endpoint set it falls back to the contact section,
+            so the page never offers something it cannot deliver. */}
+        {site.contact.whatsapp || site.orderEndpoint ? (
+          <button type="button" className="btn btn--primary" onClick={() => setOrdering(true)}>
+            {copy.order.cta}
+          </button>
         ) : (
           <a href={askHref} className="btn btn--primary" onClick={onAsk}>
             {copy.sheet.ask}
           </a>
         )}
+
+        {order ? (
+          <a href={order} className="btn btn--ghost btn--sm" target="_blank" rel="noopener noreferrer">
+            {copy.sheet.order}
+          </a>
+        ) : null}
+
+        {ordering ? (
+          <OrderForm item={item} locale={locale} onClose={() => setOrdering(false)} />
+        ) : null}
 
         <p className="footer__note" style={{ margin: 0 }}>
           {view === 'motion' ? copy.sheet.noteMotion : view === 'tilt' ? copy.sheet.noteTilt : copy.sheet.notePhoto}

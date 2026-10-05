@@ -33,11 +33,59 @@ export const site = {
   price: null as number | null,
 
   /**
-   * Phone models you can supply. Leave the array empty and the Fit section
-   * simply asks the customer which phone they have, rather than promising
-   * models you may not stock.
+   * The handsets you can supply, newest first — the order form shows them in
+   * this order and the Fit section lists them.
+   *
+   * Delete any you do not stock. Nothing here is a promise the shop cannot
+   * keep: a model that is not on this list cannot be picked.
    */
-  models: [] as string[],
+  models: [
+    'iPhone 18 Pro Max',
+    'iPhone 18 Pro',
+    'iPhone Air (2026)',
+    'iPhone 17 Pro Max',
+    'iPhone 17 Pro',
+    'iPhone 17',
+    'iPhone Air',
+    'iPhone 16 Pro Max',
+    'iPhone 16 Pro',
+    'iPhone 16 Plus',
+    'iPhone 16',
+    'iPhone 16e',
+    'iPhone 15 Pro Max',
+    'iPhone 15 Pro',
+    'iPhone 15 Plus',
+    'iPhone 15',
+    'iPhone 14 Pro Max',
+    'iPhone 14 Pro',
+    'iPhone 14 Plus',
+    'iPhone 14',
+    'iPhone 13 Pro Max',
+    'iPhone 13 Pro',
+    'iPhone 13',
+    'iPhone 13 mini',
+    'iPhone 12 Pro Max',
+    'iPhone 12 Pro',
+    'iPhone 12',
+    'iPhone 12 mini',
+    'iPhone 11 Pro Max',
+    'iPhone 11 Pro',
+    'iPhone 11',
+    'iPhone XS Max',
+    'iPhone XS',
+    'iPhone XR',
+    'iPhone X',
+  ] as string[],
+
+  /**
+   * Where the order form posts.
+   *
+   * Empty means the form still works: it collects everything and hands the
+   * finished order to WhatsApp instead, so nothing is lost while this is being
+   * set up. ORDERS.md has the five-minute Google Sheet setup — free, no
+   * monthly limit, never asks for a card.
+   */
+  orderEndpoint: '',
 
   /**
    * Cloudflare Web Analytics token, from the dashboard under Analytics > Web

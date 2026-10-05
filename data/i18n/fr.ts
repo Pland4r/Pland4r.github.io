@@ -265,5 +265,47 @@ export const fr: Copy = {
     cta: 'Voir la collection',
   },
 
+  order: {
+    cta: 'Commander cette coque',
+    title: 'Votre commande',
+    lede: 'Choisissez votre iPhone et dites-nous où l’envoyer. Nous confirmons avant toute fabrication.',
+    yourPhone: 'Votre iPhone',
+    pickPhone: 'Choisissez votre modèle',
+    noPhone: 'Choisissez d’abord votre iPhone.',
+    name: 'Nom',
+    namePh: 'Votre nom complet',
+    phone: 'Téléphone',
+    phonePh: '06 12 34 56 78',
+    city: 'Ville',
+    cityPh: 'Casablanca',
+    address: 'Adresse',
+    addressPh: 'Rue, numéro, ce qu’il faut au livreur',
+    notes: 'Autre chose',
+    notesPh: 'Une question, une heure de livraison, une autre coque…',
+    optional: 'facultatif',
+    send: 'Envoyer la commande',
+    sending: 'Envoi…',
+    sentTitle: 'Commande reçue',
+    sentBody: 'C’est bien arrivé. Nous revenons vers vous sur WhatsApp pour confirmer la disponibilité et le prix avant toute fabrication.',
+    failTitle: 'L’envoi n’a pas abouti',
+    failBody: 'Envoyez-la sur WhatsApp — rien n’est perdu, tout ce que vous avez tapé est déjà dans le message.',
+    viaWhatsapp: 'Envoyer sur WhatsApp',
+    close: 'Fermer',
+    message: (f) =>
+      `Nouvelle commande
+
+Coque : ${f.case}
+iPhone : ${f.model}
+
+Nom : ${f.name}
+Téléphone : ${f.phone}
+Ville : ${f.city}
+Adresse : ${f.address}` +
+      (f.notes ? `
+Remarques : ${f.notes}` : '') + `
+
+${f.link}`,
+  },
+
   backToTop: 'Retour en haut',
 };

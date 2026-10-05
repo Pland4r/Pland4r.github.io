@@ -1,0 +1,5 @@
+Shopping & Retail
+
+Set the account to BUSINESS, not Creator or Personal. Business is the only
+one that shows you sends per reach, which is the number that decides how far
+a post travels.

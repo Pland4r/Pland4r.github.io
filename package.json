@@ -10,6 +10,7 @@
     "assets": "python scripts/assets.py",
     "assets:images": "python scripts/assets.py images",
     "assets:video": "python scripts/assets.py video",
+    "assets:social": "python scripts/assets.py social",
     "check": "python scripts/check.py"
   },
   "dependencies": {

@@ -1,0 +1,32 @@
+MA CASES — POSTING CALENDAR
+Five posts a week. Best times in Morocco: 12:30-14:00 and 20:00-23:00.
+Evening is stronger. One post a day beats three in a burst.
+
+01  W1 Mon    REEL  Nissan Skyline GT-R R34         captions/01-nissan-skyline-gt-r-r34-1.txt
+02  W1 Wed    POST  Porsche 911 GT3 RS              captions/02-porsche-911-gt3-rs-1.txt
+03  W1 Fri    REEL  Bugatti Chiron Pur Sport        captions/03-bugatti-chiron-pur-sport-1.txt
+04  W1 Sat    REEL  McLaren Senna                   captions/04-mclaren-senna-1.txt
+05  W2 Mon    POST  BMW M3 E30                      captions/05-bmw-m3-e30-1.txt
+06  W2 Wed    REEL  Porsche 911 GT2 RS              captions/06-porsche-911-gt2-rs-1.txt
+07  W2 Thu    REEL  Mercedes-AMG CLS 63             captions/07-mercedes-amg-cls-63-1.txt
+08  W2 Sat    POST  Porsche 911 GT3 RS — Blush      captions/08-porsche-911-gt3-rs-blush-1.txt
+09  W2 Sun    REEL  BMW M4 CSL                      captions/09-bmw-m4-csl-1.txt
+10  W3 Mon    REEL  Porsche 911 GT3 RS — Roar       captions/10-porsche-911-gt3-rs-roar-1.txt
+11  W3 Tue    POST  BMW M5                          captions/11-bmw-m5-1.txt
+12  W3 Wed    REEL  Porsche 911 Brabus              captions/12-porsche-911-brabus-1.txt
+13  W3 Fri    REEL  BMW M3 Touring                  captions/13-bmw-m3-touring-1.txt
+14  W3 Sun    POST  Porsche 911 GT3 RS — Pink       captions/14-porsche-911-gt3-rs-pink-1.txt
+15  W4 Mon    POST  Nissan Skyline GT-R R34         captions/15-nissan-skyline-gt-r-r34-2.txt
+16  W4 Wed    REEL  Porsche 911 GT3 RS              captions/16-porsche-911-gt3-rs-2.txt
+17  W4 Fri    POST  Bugatti Chiron Pur Sport        captions/17-bugatti-chiron-pur-sport-2.txt
+18  W4 Sat    POST  McLaren Senna                   captions/18-mclaren-senna-2.txt
+19  W5 Mon    REEL  BMW M3 E30                      captions/19-bmw-m3-e30-2.txt
+20  W5 Wed    POST  Porsche 911 GT2 RS              captions/20-porsche-911-gt2-rs-2.txt
+21  W5 Thu    POST  Mercedes-AMG CLS 63             captions/21-mercedes-amg-cls-63-2.txt
+22  W5 Sat    REEL  Porsche 911 GT3 RS — Blush      captions/22-porsche-911-gt3-rs-blush-2.txt
+23  W5 Sun    POST  BMW M4 CSL                      captions/23-bmw-m4-csl-2.txt
+24  W6 Mon    POST  Porsche 911 GT3 RS — Roar       captions/24-porsche-911-gt3-rs-roar-2.txt
+25  W6 Tue    REEL  BMW M5                          captions/25-bmw-m5-2.txt
+26  W6 Wed    POST  Porsche 911 Brabus              captions/26-porsche-911-brabus-2.txt
+27  W6 Fri    POST  BMW M3 Touring                  captions/27-bmw-m3-touring-2.txt
+28  W6 Sun    REEL  Porsche 911 GT3 RS — Pink       captions/28-porsche-911-gt3-rs-pink-2.txt

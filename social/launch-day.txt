@@ -1,0 +1,29 @@
+MA CASES — LAUNCH DAY
+
+Do not post into an empty profile. Fill the grid first so the first visitor
+sees a shop, then start the Reels.
+
+MORNING    Create the account on your own phone. Switch to Business.
+           Set name, bio, link, profile picture, category.
+
++30 MIN    Post 3 stills back to back — GT3 RS, Senna, M4 CSL.
+           Car name only. This is the grid, not the launch.
+
++1 HR      Build the 5 highlights. Even near-empty ones make the profile
+           look run rather than abandoned.
+
+12:30      FIRST REEL: the R34, full caption.
+           This is the real launch — the widest-recognition car you own.
+           captions/01-nissan-skyline-gt-r-r34-1.txt
+
+ALL DAY    Story every hour. Behind the scenes, cases in your hand, a poll.
+           Stories tell Instagram the account is live.
+
+EVENING    Send the Reel to everyone you know and ask them to send it on.
+           Sends on day one are worth more than any hashtag.
+
+------------------------------------------------------------------ before all this
+
+Set a price and a WhatsApp number in data/site.ts. Right now the link in your
+bio lands on "price on request" and the order button is switched off. A shop
+that will not say a price loses most of the people who clicked.

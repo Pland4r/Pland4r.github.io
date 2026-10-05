@@ -51,8 +51,8 @@ export const site = {
 
   /** Optional: fill these in and they appear in the contact section + footer. */
   contact: {
-    phone: '',      // e.g. '+212 6 00 00 00 00'
-    whatsapp: '',   // digits only, e.g. '2126000000000'
+    phone: '+212 663 095 465',
+    whatsapp: '212663095465',   // digits only, with the country code
     instagram: '',  // handle without the @, e.g. 'macases'
     email: '',      // e.g. 'hello@macases.ma'
     city: '',       // e.g. 'Casablanca'

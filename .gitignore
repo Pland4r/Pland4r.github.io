@@ -9,3 +9,8 @@ Thumbs.db
 
 # Working screenshots dropped into the project root — not part of the site.
 Capture d'écran*.png
+# The Instagram pack is committed; its rendered media is not — 14 MB that
+# `npm run assets:social` rebuilds.
+social/*.mp4
+social/*-post.jpg
+social/captions.zip

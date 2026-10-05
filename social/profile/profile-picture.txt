@@ -1,0 +1,14 @@
+PROFILE PICTURE
+
+Upload: social/profile-picture.jpg   (1080x1080)
+
+Your logo, unchanged — just resized. It is already square and sits well inside
+the circle Instagram crops it to, and the MA still reads at 32px in the feed.
+
+The full-resolution original is kept at social/logo.png.
+
+HIGHLIGHT COVERS: social/highlight-1.jpg ... highlight-5.jpg
+
+The emblem only, with the MACASES wordmark dropped. Highlights show at about
+56px and the wordmark is a smudge at that size, so the covers carry the mark
+and the highlight's own label carries the words.

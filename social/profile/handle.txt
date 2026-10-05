@@ -1,0 +1,6 @@
+macases.ma
+
+Backups if taken:
+  macases.store
+  ma.cases.ma
+  macases.maroc

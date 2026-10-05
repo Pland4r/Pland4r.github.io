@@ -12,6 +12,8 @@ Turns the raw product photos in /pic into everything the site serves:
     public/video/hero.mp4            hero banner loop + poster
     public/video/dark/...            the same clips on a dark stage
     public/og/<slug>.jpg             1200x630 link-preview card
+    social/<slug>-post.jpg           1080x1350 Instagram feed post
+    social/<slug>-reel.mp4           1080x1920 Instagram Reel / story
 
 The cut-out only ever removes the studio background — the printed artwork is
 never touched, resized against its shell, or recoloured.
@@ -25,6 +27,7 @@ Usage
     python scripts/assets.py images     # stills only (fast)
     python scripts/assets.py video      # clips + hero, every case
     python scripts/assets.py video <slug>...   # only those clips, plus the hero
+    python scripts/assets.py social     # Instagram posts and Reels, into /social
 
 Requires: pillow, numpy, scipy, and ffmpeg on PATH.
     python -m pip install pillow numpy scipy
@@ -50,6 +53,7 @@ CASES = os.path.join(ROOT, "public", "cases")
 PHOTO = os.path.join(CASES, "photo")
 VIDEO = os.path.join(ROOT, "public", "video")
 OG = os.path.join(ROOT, "public", "og")
+SOCIAL = os.path.join(ROOT, "social")
 
 FPS = 30
 
@@ -937,6 +941,130 @@ def build_video(only: list[str] | None = None) -> None:
         _remember(hero, *every)
 
 
+def _mark(frame: np.ndarray, w: int, h: int, pad: int, height: int) -> np.ndarray:
+    """Set the MA emblem into a corner of a rendered frame."""
+    path = os.path.join(ROOT, "public", "brand", "ma-mark-on-light.png")
+    if not os.path.exists(path):
+        return frame
+    mark = Image.open(path).convert("RGBA")
+    mark = mark.resize((max(1, int(mark.width * height / mark.height)), height), Image.LANCZOS)
+    mw, mh = mark.size
+    rgb = np.asarray(mark).astype(np.float32)[:, :, :3]
+    alpha = (np.asarray(mark)[:, :, 3].astype(np.float32) * 0.80).astype(np.uint8)
+    return _composite(frame, rgb, alpha, (w - mw) // 2, h - pad - mh, w, h)
+
+
+def social_post(slug: str, accent_hex: str, w: int = 1080, h: int = 1350) -> None:
+    """
+    The still that goes in the feed.
+
+    4:5 because it is the tallest ratio the feed allows, and height is screen:
+    a square gives away a fifth of the space someone's thumb is already on.
+    No text burned in — the caption carries the words, and a picture with
+    writing baked into it cannot be reused in another language.
+    """
+    accent = tuple(int(accent_hex[i:i + 2], 16) for i in (1, 3, 5))
+    case = _load(slug, int(h * 0.74))
+    cw, ch = case.size
+    rgb = np.asarray(case).astype(np.float32)[:, :, :3]
+    alpha = np.asarray(case)[:, :, 3]
+
+    ox, oy = (w - cw) // 2, int(h * 0.10)
+    frame = _backdrop(w, h, accent, dark=False)
+    frame -= _shadow(alpha, w, h, ox, oy + 52, 0.38, 70)
+    frame -= _shadow(alpha, w, h, ox, oy + 26, 0.30, 24)
+    frame = _composite(frame, rgb, alpha, ox, oy, w, h)
+    frame = _mark(frame, w, h, int(h * 0.045), int(h * 0.040))
+
+    os.makedirs(SOCIAL, exist_ok=True)
+    Image.fromarray(np.clip(frame, 0, 255).astype(np.uint8)).save(
+        os.path.join(SOCIAL, f"{slug}-post.jpg"), quality=92, optimize=True
+    )
+
+
+def social_reel(slug: str, accent_hex: str, w: int = 1080, h: int = 1920,
+                secs: float = 7.0) -> None:
+    """
+    The Reel.
+
+    Reels are the only surface that reliably reaches people who do not already
+    follow the account, so this is the one that matters. 1080x1920 fills the
+    phone; seven seconds loops before anyone decides to leave, which is what
+    watch time is actually made of.
+
+    The case turns as well as floats. A still of a phone case is a photograph
+    of a shop window — the turn is what shows it is a real object, and it is
+    the same cut-out the site uses, not a render.
+    """
+    accent = tuple(int(accent_hex[i:i + 2], 16) for i in (1, 3, 5))
+    total = int(FPS * secs)
+
+    case = _load(slug, int(h * 0.62))
+    cw, ch = case.size
+    rgb = np.asarray(case).astype(np.float32)[:, :, :3]
+    alpha = np.asarray(case)[:, :, 3]
+    stage = _backdrop(w, h, accent, dark=False)
+    base_x, base_y = (w - cw) // 2, int(h * 0.17)
+
+    def frames():
+        for i in range(total):
+            t = i / total
+            frame = stage.copy()
+            lift = 16 * math.sin(2 * math.pi * t)
+            oy = base_y + int(round(lift))
+
+            # A slow swing across the full loop, eased so it never snaps back.
+            swing = math.sin(2 * math.pi * t)
+            squeeze = 1.0 - 0.13 * abs(swing)
+            tw = max(1, int(cw * squeeze))
+            shifted = np.asarray(
+                Image.fromarray(np.dstack([rgb.astype(np.uint8), alpha]), "RGBA")
+                .resize((tw, ch), Image.LANCZOS)
+            )
+            ox = (w - tw) // 2 + int(round(swing * 26))
+
+            frame -= _shadow(shifted[:, :, 3], w, h, ox, oy + 62, 0.36, 80)
+            frame -= _shadow(shifted[:, :, 3], w, h, ox, oy + int(30 - lift), 0.28, 26)
+            frame = _composite(
+                frame, shifted[:, :, :3].astype(np.float32), shifted[:, :, 3], ox, oy, w, h
+            )
+            frame = _mark(frame, w, h, int(h * 0.055), int(h * 0.030))
+            yield np.clip(frame, 0, 255)
+
+    os.makedirs(SOCIAL, exist_ok=True)
+    _encode(frames(), os.path.join(SOCIAL, f"{slug}-reel.mp4"), w, h, crf=20)
+
+
+def build_social(only: list[str] | None = None, force: bool = False) -> None:
+    """
+    Everything the Instagram account posts, from the same cut-outs the site uses.
+
+    Written to /social rather than /public: these are files to upload by hand,
+    not pages to serve, and shipping them with the site would mean every
+    visitor's browser could fetch a folder of marketing renders nothing links
+    to.
+    """
+    os.makedirs(SOCIAL, exist_ok=True)
+    for entry in catalogue():
+        slug = entry["slug"]
+        if only and slug not in only:
+            continue
+        png = os.path.join(CASES, f"{slug}.png")
+        post = os.path.join(SOCIAL, f"{slug}-post.jpg")
+        reel = os.path.join(SOCIAL, f"{slug}-reel.mp4")
+
+        if force or not _fresh(post, png):
+            social_post(slug, entry["accent"])
+            _remember(post, png)
+            print(f"  post  {slug}", flush=True)
+        if force or not _fresh(reel, png):
+            print(f"  reel  {slug}", flush=True)
+            social_reel(slug, entry["accent"])
+            _remember(reel, png)
+
+    print(f"  -> {os.path.relpath(SOCIAL, ROOT)}/")
+
+
 def stamp() -> dict:
     """
     A short content hash per case, and one for the hero.
@@ -1000,6 +1128,12 @@ if __name__ == "__main__":
     if what in ("all", "video"):
         print("video")
         build_video(only=[a for a in sys.argv[2:] if not a.startswith("-")] or None)
+    if what == "social":
+        print("social")
+        build_social(
+            only=[a for a in sys.argv[2:] if not a.startswith("-")] or None,
+            force="--force" in sys.argv,
+        )
 
     stamp()
     _save_sources()

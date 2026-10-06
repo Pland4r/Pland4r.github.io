@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { collection } from '@/data/cases';
 import { INTENTS, facts, route } from '@/data/assistant';
 import { getCopy, type Locale } from '@/data/i18n';
+import { path } from '@/data/i18n';
 import { enquiryLink, site } from '@/data/site';
 import { Close } from './Icons';
 
@@ -71,6 +72,17 @@ export default function Assistant({ locale }: { locale: Locale }) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             facts: f,
+            // The whole catalogue, so it can answer "which colours" or "what is
+            // on the Chiron" instead of refusing. It is built from the same
+            // data the page renders, so the two cannot drift apart.
+            cases: cases.map((c) => ({
+              marque: c.marque,
+              model: c.model,
+              caption: c.caption,
+              shell: c.shellLabel,
+              printed: c.printed ?? [],
+              link: `${site.url}${path(locale, `${c.slug}/`)}`,
+            })),
             messages: [
               ...lines.map((l) => ({
                 role: l.from === 'us' ? 'user' : 'assistant',
@@ -89,7 +101,7 @@ export default function Assistant({ locale }: { locale: Locale }) {
         setThinking(false);
       }
     },
-    [locale, f, lines, copy.assistant.unknown],
+    [locale, f, cases, lines, copy.assistant.unknown],
   );
 
   const submit = (e: React.FormEvent) => {

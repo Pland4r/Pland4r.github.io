@@ -51,17 +51,16 @@ export default function Assistant({ locale }: { locale: Locale }) {
     async (question: string) => {
       setLines((l) => [...l, { from: 'us', text: question }]);
 
-      // The written answers first: they are instant, free, and the ones the
-      // shop has already stood behind. The model is only for what they miss.
       const hit = route(question, locale);
-      if (hit) {
-        setAsked((a) => (a.includes(hit.id) ? a : [...a, hit.id]));
-        setLines((l) => [...l, { from: 'them', text: hit.answer[locale](f) }]);
-        return;
-      }
+      const written = hit ? hit.answer[locale](f) : copy.assistant.unknown;
+      if (hit) setAsked((a) => (a.includes(hit.id) ? a : [...a, hit.id]));
 
+      // The model answers, because it can follow a question that is not one of
+      // the nine written ones. The written answer stays as the net: if the
+      // Worker is down or slow to fail, the customer still gets the right reply
+      // rather than an error, and the shop still says the same thing.
       if (!site.assistantEndpoint) {
-        setLines((l) => [...l, { from: 'them', text: copy.assistant.unknown }]);
+        setLines((l) => [...l, { from: 'them', text: written }]);
         return;
       }
 
@@ -82,13 +81,10 @@ export default function Assistant({ locale }: { locale: Locale }) {
           }),
         });
         const data = await res.json();
-        setLines((l) => [
-          ...l,
-          { from: 'them', text: data?.reply || copy.assistant.unknown },
-        ]);
+        setLines((l) => [...l, { from: 'them', text: data?.reply || written }]);
       } catch {
         // A model that is down must not take the shop down with it.
-        setLines((l) => [...l, { from: 'them', text: copy.assistant.unknown }]);
+        setLines((l) => [...l, { from: 'them', text: written }]);
       } finally {
         setThinking(false);
       }

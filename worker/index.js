@@ -14,7 +14,7 @@
  */
 
 // Ollama Cloud, through its OpenAI-compatible layer.
-const MODEL = 'gpt-oss:20b';
+const MODEL = 'gemma4:31b';
 const UPSTREAM = 'https://ollama.com/v1/chat/completions';
 
 /** Who may call this. An open proxy to a paid API is someone else's free lunch. */

@@ -7,4 +7,4 @@ compatibility_date = "2026-10-01"
 # Anything in this file is in git; a secret is not.
 
 [vars]
-OLLAMA_MODEL = "gpt-oss:20b"
+OLLAMA_MODEL = "gemma4:31b"

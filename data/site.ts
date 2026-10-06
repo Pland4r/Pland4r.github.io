@@ -89,7 +89,7 @@ export const site = {
    * browser, so a key in this file is a key anyone can read and spend — which
    * is the whole reason the Worker exists.
    */
-  assistantEndpoint: '',
+  assistantEndpoint: 'https://ma-cases-assistant.skinny-observation.workers.dev',
 
   /**
    * Where the order form posts.

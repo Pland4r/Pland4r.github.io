@@ -47,9 +47,9 @@ export const INTENTS: Intent[] = [
     id: 'price',
     ask: { en: 'How much is it?', fr: 'C’est combien ?', ar: 'بشحال؟' },
     match: {
-      en: ['price', 'cost', 'how much', 'dh', 'expensive', 'cheap', 'discount'],
-      fr: ['prix', 'combien', 'cout', 'coute', 'cher', 'reduction', 'promo'],
-      ar: ['شحال', 'الثمن', 'ثمن', 'بشحال', 'غالي', 'تخفيض', 'درهم', 'bchhal', 'chhal', 'taman', 'tmn', 'ghali', 'floss', 'flous', 'prix'],
+      en: ['price', 'cost', 'how much', 'dh', 'expensive', 'cheap', 'discount', 'how much'],
+      fr: ['prix', 'combien', 'cout', 'coute', 'cher', 'reduction', 'promo', 'combien ca coute'],
+      ar: ['شحال', 'الثمن', 'ثمن', 'بشحال', 'غالي', 'تخفيض', 'درهم', 'bchhal', 'chhal', 'taman', 'tmn', 'ghali', 'floss', 'flous', 'prix', 'بشحال هو'],
     },
     answer: {
       en: (f) =>
@@ -64,9 +64,9 @@ export const INTENTS: Intent[] = [
     id: 'fit',
     ask: { en: 'Will it fit my phone?', fr: 'Ça ira sur mon téléphone ?', ar: 'واش غادي يجي لتيليفوني؟' },
     match: {
-      en: ['fit', 'iphone', 'model', 'samsung', 'size', 'my phone', 'compatible'],
-      fr: ['taille', 'iphone', 'modele', 'samsung', 'compatible', 'mon telephone', 'ira'],
-      ar: ['يجي', 'ايفون', 'آيفون', 'موديل', 'سامسونڭ', 'تيليفوني', 'هاتفي', 'مقاس', 'wach ghadi', 'ayfon', 'modil', 'telefoni', 'telifon', 'mqas'],
+      en: ['fit', 'iphone', 'model', 'samsung', 'size', 'my phone', 'compatible', 'which iphone', 'what iphone', 'does it fit', 'my iphone'],
+      fr: ['taille', 'iphone', 'modele', 'samsung', 'compatible', 'mon telephone', 'ira', 'quel iphone', 'mon iphone', 'ca va'],
+      ar: ['يجي', 'ايفون', 'آيفون', 'موديل', 'سامسونڭ', 'تيليفوني', 'هاتفي', 'مقاس', 'wach ghadi', 'ayfon', 'modil', 'telefoni', 'telifon', 'mqas', 'أشمن ايفون', 'ayfon dyali'],
     },
     answer: {
       en: (f) =>
@@ -98,9 +98,9 @@ export const INTENTS: Intent[] = [
     id: 'delivery',
     ask: { en: 'Do you deliver to my city?', fr: 'Vous livrez chez moi ?', ar: 'واش كتوصلو لمدينتي؟' },
     match: {
-      en: ['deliver', 'delivery', 'shipping', 'ship', 'city', 'where', 'long', 'days'],
-      fr: ['livraison', 'livrez', 'livrer', 'ville', 'delai', 'jours', 'expedition'],
-      ar: ['توصيل', 'كتوصلو', 'توصلو', 'مدينة', 'مدينتي', 'شحال كتاخد', 'وقت', 'twsil', 'tawsil', 'katwuslo', 'kayweslo', 'madina', 'mdina'],
+      en: ['deliver', 'delivery', 'shipping', 'ship', 'city', 'where', 'long', 'days', 'how long', 'when will', 'arrive'],
+      fr: ['livraison', 'livrez', 'livrer', 'ville', 'delai', 'jours', 'expedition', 'quand', 'combien de temps', 'arrive'],
+      ar: ['توصيل', 'كتوصلو', 'توصلو', 'مدينة', 'مدينتي', 'شحال كتاخد', 'وقت', 'twsil', 'tawsil', 'katwuslo', 'kayweslo', 'madina', 'mdina', 'إمتى', 'fouqach', 'chhal katakhod'],
     },
     answer: {
       en: (f) =>
@@ -166,8 +166,8 @@ export const INTENTS: Intent[] = [
     id: 'returns',
     ask: { en: 'What if I do not like it?', fr: 'Et si ça ne me plaît pas ?', ar: 'إلا ما عجبنيش؟' },
     match: {
-      en: ['return', 'refund', 'broken', 'wrong', 'problem', 'guarantee', 'warranty', 'not like'],
-      fr: ['retour', 'rembours', 'casse', 'probleme', 'garantie', 'plait pas', 'erreur'],
+      en: ['return', 'refund', 'broken', 'wrong', 'problem', 'guarantee', 'warranty', 'not like', 'breaks', 'break', 'damaged', 'defect', 'exchange', 'change it', 'send back'],
+      fr: ['retour', 'rembours', 'casse', 'probleme', 'garantie', 'plait pas', 'erreur', 'casse', 'abime', 'defaut', 'echange', 'renvoyer'],
       ar: ['إرجاع', 'ارجاع', 'مشكل', 'ضمان', 'ماعجبنيش', 'عجبنيش', 'خطأ', 'machkil', 'mouchkil', 'ma3jabnich', 'majabnich', 'garanti'],
     },
     answer: {
@@ -183,9 +183,9 @@ export const INTENTS: Intent[] = [
     id: 'catalogue',
     ask: { en: 'What cars do you have?', fr: 'Quelles voitures avez-vous ?', ar: 'شنو عندكم ديال الطوموبيلات؟' },
     match: {
-      en: ['cars', 'models do you', 'have', 'catalogue', 'collection', 'designs', 'other'],
-      fr: ['voitures', 'avez vous', 'catalogue', 'collection', 'modeles', 'autres', 'designs'],
-      ar: ['طوموبيلات', 'عندكم', 'المجموعة', 'تصاميم', 'أخرى', 'اخرى', '3andkom', 'andkom', 'tomobilat', 'tomobila', 'chno 3andkom'],
+      en: ['cars', 'models do you', 'have', 'catalogue', 'collection', 'designs', 'other', 'cases', 'case', 'available', 'stock', 'list', 'show me', 'what do you have', 'which ones', 'choices', 'options', 'designs', 'range', 'selection', 'what cars'],
+      fr: ['voitures', 'avez vous', 'catalogue', 'collection', 'modeles', 'autres', 'designs', 'coques', 'coque', 'disponibles', 'disponible', 'stock', 'liste', 'montrez', 'quelles', 'lesquelles', 'choix', 'gamme', 'selection', 'quelles voitures'],
+      ar: ['طوموبيلات', 'عندكم', 'المجموعة', 'تصاميم', 'أخرى', 'اخرى', '3andkom', 'andkom', 'tomobilat', 'tomobila', 'chno 3andkom', 'كاين', 'شنو كاين', 'اللائحة', 'المتوفر', 'متوفر', 'أجربة', 'جرابات', 'ljraba', 'kayn', 'chno kayn', 'lista', 'mtwfr'],
     },
     answer: {
       en: (f) =>
@@ -214,9 +214,19 @@ export function facts(caseCount: number, marques: string[] = []): Facts {
   };
 }
 
-/** The best intent for a line of text, or null when nothing is a clear match. */
+/**
+ * The best intent for a line of text, or null when nothing is a clear match.
+ *
+ * Whole words, not substrings: "have" used to match "behave" and "car" matched
+ * "card". `normalise` has already turned every separator into a space, so
+ * padding both sides and searching for " word " is all a word boundary needs
+ * here — and it works for a two-word key like "how much" too.
+ *
+ * An intent scores the sum of what it matched rather than its longest single
+ * hit, so "what cases do you have" beats a one-word coincidence elsewhere.
+ */
 export function route(text: string, locale: Locale): Intent | null {
-  const t = normalise(text);
+  const t = ` ${normalise(text).split(/\s+/).filter(Boolean).join(' ')} `;
   if (t.trim().length < 2) return null;
 
   let best: { intent: Intent; score: number } | null = null;
@@ -224,10 +234,10 @@ export function route(text: string, locale: Locale): Intent | null {
   for (const intent of INTENTS) {
     // Every language's keywords are tried, not just the page's: people write
     // Darija in a French-language session and type "prix" on the Arabic page.
-    const words = Object.values(intent.match).flat();
     let score = 0;
-    for (const w of words) {
-      if (t.includes(normalise(w))) score = Math.max(score, w.length);
+    for (const raw of Object.values(intent.match).flat()) {
+      const w = normalise(raw).split(/\s+/).filter(Boolean).join(' ');
+      if (w && t.includes(` ${w} `)) score += w.length;
     }
     if (score && (!best || score > best.score)) best = { intent, score };
   }

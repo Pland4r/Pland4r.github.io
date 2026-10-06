@@ -1,0 +1,10 @@
+name = "ma-cases-assistant"
+main = "index.js"
+compatibility_date = "2026-10-01"
+
+# The API key is NOT here. It is a secret, set once with:
+#   npx wrangler secret put OLLAMA_API_KEY
+# Anything in this file is in git; a secret is not.
+
+[vars]
+OLLAMA_MODEL = "gpt-oss:20b"

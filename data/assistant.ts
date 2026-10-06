@@ -31,6 +31,7 @@ type Facts = {
   cases: number;
   newest: string;
   oldest: string;
+  marques: string;
 };
 
 /** Lowercase, strip accents and Arabic diacritics, so "livré" matches "livre". */
@@ -198,7 +199,7 @@ export const INTENTS: Intent[] = [
 ];
 
 /** The numbers the answers quote, read from the real settings. */
-export function facts(caseCount: number): Facts {
+export function facts(caseCount: number, marques: string[] = []): Facts {
   const price = site.price === null ? '—' : `${site.price} ${site.currency}`;
   const newest = site.models[0] ?? '';
   const oldest = site.models[site.models.length - 1] ?? '';
@@ -209,6 +210,7 @@ export function facts(caseCount: number): Facts {
     cases: caseCount,
     newest,
     oldest,
+    marques: marques.join(', '),
   };
 }
 

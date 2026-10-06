@@ -78,6 +78,20 @@ export const site = {
   ] as string[],
 
   /**
+   * The assistant's brain, if you have deployed one.
+   *
+   * Empty means the assistant answers only from its written replies in
+   * data/assistant.ts, which is a perfectly good shop assistant and costs
+   * nothing. Set it to the Cloudflare Worker's URL (see worker/README.md) and
+   * it answers free questions with a model as well.
+   *
+   * The API key is never here. A static site ships everything it holds to the
+   * browser, so a key in this file is a key anyone can read and spend — which
+   * is the whole reason the Worker exists.
+   */
+  assistantEndpoint: '',
+
+  /**
    * Where the order form posts.
    *
    * Empty means the form still works: it collects everything and hands the

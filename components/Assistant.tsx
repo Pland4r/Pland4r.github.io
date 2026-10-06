@@ -26,10 +26,12 @@ export default function Assistant({ locale }: { locale: Locale }) {
   const [lines, setLines] = useState<Line[]>([]);
   const [asked, setAsked] = useState<string[]>([]);
   const [draft, setDraft] = useState('');
+  const [thinking, setThinking] = useState(false);
   const log = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLInputElement>(null);
 
-  const f = facts(collection(locale).length);
+  const cases = collection(locale);
+  const f = facts(cases.length, Array.from(new Set(cases.map((c) => c.marque))));
   const human = enquiryLink(copy);
 
   useEffect(() => {
@@ -46,16 +48,52 @@ export default function Assistant({ locale }: { locale: Locale }) {
   }, [lines]);
 
   const reply = useCallback(
-    (question: string) => {
+    async (question: string) => {
+      setLines((l) => [...l, { from: 'us', text: question }]);
+
+      // The written answers first: they are instant, free, and the ones the
+      // shop has already stood behind. The model is only for what they miss.
       const hit = route(question, locale);
-      setLines((l) => [
-        ...l,
-        { from: 'us', text: question },
-        { from: 'them', text: hit ? hit.answer[locale](f) : copy.assistant.unknown },
-      ]);
-      if (hit) setAsked((a) => (a.includes(hit.id) ? a : [...a, hit.id]));
+      if (hit) {
+        setAsked((a) => (a.includes(hit.id) ? a : [...a, hit.id]));
+        setLines((l) => [...l, { from: 'them', text: hit.answer[locale](f) }]);
+        return;
+      }
+
+      if (!site.assistantEndpoint) {
+        setLines((l) => [...l, { from: 'them', text: copy.assistant.unknown }]);
+        return;
+      }
+
+      setThinking(true);
+      try {
+        const res = await fetch(site.assistantEndpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            facts: f,
+            messages: [
+              ...lines.map((l) => ({
+                role: l.from === 'us' ? 'user' : 'assistant',
+                content: l.text,
+              })),
+              { role: 'user', content: question },
+            ],
+          }),
+        });
+        const data = await res.json();
+        setLines((l) => [
+          ...l,
+          { from: 'them', text: data?.reply || copy.assistant.unknown },
+        ]);
+      } catch {
+        // A model that is down must not take the shop down with it.
+        setLines((l) => [...l, { from: 'them', text: copy.assistant.unknown }]);
+      } finally {
+        setThinking(false);
+      }
     },
-    [locale, f, copy.assistant.unknown],
+    [locale, f, lines, copy.assistant.unknown],
   );
 
   const submit = (e: React.FormEvent) => {
@@ -110,6 +148,11 @@ export default function Assistant({ locale }: { locale: Locale }) {
                 {l.text}
               </p>
             ))}
+            {thinking ? (
+              <p className="askline askline--them askline--wait" aria-label={copy.assistant.send}>
+                <span /><span /><span />
+              </p>
+            ) : null}
           </div>
 
           {chips.length ? (
@@ -130,7 +173,11 @@ export default function Assistant({ locale }: { locale: Locale }) {
               placeholder={copy.assistant.placeholder}
               aria-label={copy.assistant.placeholder}
             />
-            <button type="submit" aria-label={copy.assistant.send} disabled={!draft.trim()}>
+            <button
+              type="submit"
+              aria-label={copy.assistant.send}
+              disabled={!draft.trim() || thinking}
+            >
               <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
                 <path
                   d="M2 7.5h10M8 3.5l4 4-4 4"

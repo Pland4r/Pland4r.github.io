@@ -292,5 +292,18 @@ Notes: ${f.notes}` : '') + `
 ${f.link}`,
   },
 
+  assistant: {
+    open: 'Ask a question',
+    title: 'Ask us',
+    subtitle: 'Common questions, answered straight away',
+    greeting: 'Hello. Tap a question below, or type your own — anything I cannot answer goes straight to a person on WhatsApp.',
+    placeholder: 'Type your question…',
+    send: 'Send',
+    close: 'Close',
+    unknown: 'I do not have a good answer for that one, and I would rather not guess. Send it to us on WhatsApp and a person will reply.',
+    toHuman: 'Talk to a person',
+    disclaimer: 'Written answers, not a robot guessing.',
+  },
+
   backToTop: 'Back to top',
 };

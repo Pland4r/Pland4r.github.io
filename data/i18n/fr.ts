@@ -308,5 +308,18 @@ Remarques : ${f.notes}` : '') + `
 ${f.link}`,
   },
 
+  assistant: {
+    open: 'Poser une question',
+    title: 'Demandez-nous',
+    subtitle: 'Les questions courantes, répondues tout de suite',
+    greeting: 'Bonjour. Touchez une question ci-dessous, ou écrivez la vôtre — tout ce que je ne sais pas répondre part directement à une personne sur WhatsApp.',
+    placeholder: 'Écrivez votre question…',
+    send: 'Envoyer',
+    close: 'Fermer',
+    unknown: 'Je n’ai pas de bonne réponse à celle-là, et je préfère ne pas inventer. Envoyez-la sur WhatsApp et une personne vous répondra.',
+    toHuman: 'Parler à une personne',
+    disclaimer: 'Des réponses écrites, pas un robot qui devine.',
+  },
+
   backToTop: 'Retour en haut',
 };

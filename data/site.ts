@@ -30,7 +30,7 @@ export const site = {
    * nothing invented is ever shown to a customer.
    * Set it to a number (e.g. `PRICE = 149`) and every card updates at once.
    */
-  price: null as number | null,
+  price: 130 as number | null,
 
   /**
    * The handsets you can supply, newest first — the order form shows them in

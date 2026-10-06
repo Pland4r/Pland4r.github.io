@@ -222,5 +222,18 @@ export type Copy = {
     }) => string;
   };
 
+  assistant: {
+    open: string;
+    title: string;
+    subtitle: string;
+    greeting: string;
+    placeholder: string;
+    send: string;
+    close: string;
+    unknown: string;
+    toHuman: string;
+    disclaimer: string;
+  };
+
   backToTop: string;
 };

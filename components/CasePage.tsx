@@ -1,6 +1,7 @@
 import type { Case } from '@/data/cases';
 import { everyPath, getCopy, path, type Locale } from '@/data/i18n';
 import { site } from '@/data/site';
+import Assistant from './Assistant';
 import BackToTop from './BackToTop';
 import CaseDetail from './CaseDetail';
 import Contact from './Contact';
@@ -43,6 +44,7 @@ export default function CasePage({ item, locale }: { item: Case; locale: Locale 
       </main>
       <Footer locale={locale} />
       <BackToTop locale={locale} />
+      <Assistant locale={locale} />
 
       {/* Lets a search engine show the case as a product rather than a page. */}
       <script

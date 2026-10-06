@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { DEFAULT_LOCALE, LOCALES, getCopy, path, type Locale } from '@/data/i18n';
+import Assistant from './Assistant';
 import BackToTop from './BackToTop';
 import Collection from './Collection';
 import Contact from './Contact';
@@ -54,6 +55,7 @@ export default function NotFound() {
       </main>
       <Footer locale={locale} />
       <BackToTop locale={locale} />
+      <Assistant locale={locale} />
     </Page>
   );
 }

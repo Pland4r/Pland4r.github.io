@@ -13,4 +13,8 @@ Capture d'écran*.png
 # `npm run assets:social` rebuilds.
 social/*.mp4
 social/*-post.jpg
+# The staged shots are rebuilt from /pic; the prompts that regenerate
+# them properly are written by hand and belong in the repo.
+social/mockups/*
+!social/mockups/prompts/
 social/captions.zip

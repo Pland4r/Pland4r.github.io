@@ -11,6 +11,8 @@
     "assets:images": "python scripts/assets.py images",
     "assets:video": "python scripts/assets.py video",
     "assets:social": "python scripts/assets.py social",
+    "assets:mockups": "python scripts/mockups.py",
+    "assets:prompts": "python scripts/prompts.py",
     "check": "python scripts/check.py"
   },
   "dependencies": {

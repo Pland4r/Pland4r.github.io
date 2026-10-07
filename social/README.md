@@ -18,12 +18,51 @@ social/
   dm-replies.txt      10 saved replies for what customers actually ask
   <slug>-post.jpg     1080x1350 feed stills   (not in git — 14 MB)
   <slug>-reel.mp4     1080x1920 Reels         (not in git)
+  mockups/            five staged shots per case (not in git — 22 MB)
+  mockups/prompts/    the prompts that regenerate those five properly
 ```
+
+Every case is staged five ways, so a carousel can run four or five frames of
+the same case without repeating a picture:
+
+```
+<slug>-studio.jpg   straight on, grey sweep          1080x1350
+<slug>-angle.jpg    turned, the side of the shell    1080x1350
+<slug>-macro.jpg    close on the camera corner       1080x1350
+<slug>-night.jpg    dark stage, lit by its colour    1080x1350
+<slug>-flat.jpg     laid on a desk, from above       1350x1080
+```
+
+These are the supplier photo restaged, not a redraw. The print, the shell
+colour and the cut-outs are the photo's own pixels; the side of the case is
+built from its own shell colour, with buttons at the rows where the photo
+actually has them. What is added is the room: backdrop, light, shadow,
+reflection. So they are safe to post next to the real thing, which is the rule
+the whole shop runs on.
+
+They have a ceiling, and it is worth knowing where it is. A composite cannot
+invent what the supplier photo does not contain: the camera module stays flat,
+because it is a picture of a module and not a module, and the small print stays
+unreadable, because it is unreadable in the photo. The reference shots in
+`social/simillar` do not have that ceiling — an image model rebuilt the case to
+make them. `social/mockups/prompts/` holds the prompts to do the same for every
+case in the catalogue, and its README says what to check before posting the
+results, because a model that rebuilds the case will also happily improve it
+into something the customer will not receive.
 
 Rebuild the images and Reels anytime:
 
 ```bash
-npm run assets:social
+npm run assets:social     # feed stills and Reels
+npm run assets:mockups    # the five staged shots, into social/mockups
+npm run assets:prompts    # the prompts to regenerate those five properly
+```
+
+One case or one scene at a time, while you are deciding:
+
+```bash
+python scripts/mockups.py porsche-911-brabus
+python scripts/mockups.py --scene night
 ```
 
 ## What actually moves reach

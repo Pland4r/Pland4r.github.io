@@ -129,6 +129,83 @@ Push, and the orders start landing in the sheet.
 
 ---
 
+## Telegram, so your phone actually rings
+
+Email is quiet. Telegram pushes like a message, and it is free with no limits.
+
+### 1. Make the bot
+
+In Telegram, message **@BotFather** → `/newbot` → give it a name and a username
+ending in `bot`. It replies with a token like `8123456789:AAH-xxxxxxxxxxxxxxxxx`.
+
+**Paste it straight into the script below — do not send it to anyone, me
+included.** Anyone with that token can post as your bot.
+
+### 2. Get your chat id
+
+Message **@userinfobot** in Telegram. It replies with your `Id`, a number like
+`584920135`.
+
+Then send your own new bot any message — `hi` is fine. A bot cannot start a
+conversation, so without this first message it has nowhere to send.
+
+### 3. Add it to the script
+
+At the top of `Code.gs`, next to `NOTIFY`:
+
+```javascript
+const TELEGRAM_TOKEN = '';   // from @BotFather
+const TELEGRAM_CHAT  = '';   // your Id from @userinfobot
+```
+
+And inside `doPost`, just after the `if (NOTIFY) { … }` block, before the
+`return`:
+
+```javascript
+    if (TELEGRAM_TOKEN && TELEGRAM_CHAT) {
+      const text = [
+        '*New order*',
+        '',
+        'Case: ' + (order.case || ''),
+        'iPhone: ' + (order.model || ''),
+        '',
+        'Name: ' + (order.name || ''),
+        'Phone: ' + (order.phone || ''),
+        'City: ' + (order.city || ''),
+        'Address: ' + (order.address || ''),
+        order.notes ? 'Notes: ' + order.notes : '',
+        '',
+        order.link || '',
+      ].filter(String).join('
+');
+
+      UrlFetchApp.fetch('https://api.telegram.org/bot' + TELEGRAM_TOKEN + '/sendMessage', {
+        method: 'post',
+        payload: { chat_id: TELEGRAM_CHAT, text: text, parse_mode: 'Markdown' },
+        // A Telegram outage must not lose the order — the row is already written.
+        muteHttpExceptions: true,
+      });
+    }
+```
+
+### 4. Redeploy
+
+**Déployer → Gérer les déploiements → ✏️ → Version: Nouvelle version → Déployer.**
+
+Use *Gérer*, not *Nouveau* — a new deployment gives a new URL and the site would
+stop reaching it.
+
+Every order now arrives as a Telegram message, within a second, with the
+customer's phone number right there to tap.
+
+### Why it goes here rather than on the website
+
+The sheet is the record and Telegram is the notification. Putting the bot token
+on the website would publish it — a static site ships everything it holds to the
+browser. Here it sits in your own script, which nobody else can read.
+
+---
+
 ## Using it
 
 Open the sheet on your phone — the Google Sheets app shows it like a list.

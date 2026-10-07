@@ -193,6 +193,9 @@ export const fr: Copy = {
     howLongBody: 'Délai habituel une fois votre commande confirmée.',
     shipping: 'Frais de port',
     flatRate: (country) => `Tarif unique partout au ${country}.`,
+    freeInCities: (cities) => `Gratuite à ${cities}`,
+    freeHere: 'Gratuite',
+    elsewhere: (fee, country) => `Gratuite dans les villes ci-dessus. ${fee} partout ailleurs au ${country}.`,
     flatRateFreeOver: (country, over) =>
       `Tarif unique partout au ${country}. Gratuit au-delà de ${over}.`,
   },
@@ -220,6 +223,10 @@ export const fr: Copy = {
       'Dites-nous où vous êtes.',
     outsideAnywhere: (country) =>
       `Nous livrons partout au ${country}. Dites-nous votre ville et nous confirmons.`,
+    costQ: 'Combien coûte la livraison ?',
+    costFree: (cities, fee, country) =>
+      `Gratuite à ${cities}. ${fee} partout ailleurs au ${country}, réglés au livreur en même temps que la coque.`,
+    costFlat: (fee, country) => `${fee} partout au ${country}, réglés au livreur avec la coque.`,
     codQ: 'Puis-je payer à la livraison ?',
     codA:
       'Oui — paiement à la livraison. Vous payez le livreur quand la coque arrive.',

@@ -27,6 +27,16 @@ function questions(copy: Copy) {
     },
   ];
 
+  if (d.fee !== null) {
+    const fee = `${d.fee} ${site.currency}`;
+    list.push({
+      q: copy.faq.costQ,
+      a: d.freeIn.length
+        ? copy.faq.costFree(d.freeIn.join(', '), fee, country)
+        : copy.faq.costFlat(fee, country),
+    });
+  }
+
   if (d.cashOnDelivery) {
     list.push({ q: copy.faq.codQ, a: copy.faq.codA });
   }

@@ -32,6 +32,8 @@ type Facts = {
   newest: string;
   oldest: string;
   marques: string;
+  /** What delivery costs, already worded. */
+  shipping: string;
 };
 
 /** Lowercase, strip accents and Arabic diacritics, so "livré" matches "livre". */
@@ -211,6 +213,12 @@ export function facts(caseCount: number, marques: string[] = []): Facts {
     newest,
     oldest,
     marques: marques.join(', '),
+    shipping:
+      site.delivery.fee === null
+        ? ''
+        : site.delivery.freeIn.length > 0
+          ? `Delivery is free in ${site.delivery.freeIn.join(', ')}, and ${site.delivery.fee} ${site.currency} anywhere else.`
+          : `Delivery is ${site.delivery.fee} ${site.currency}.`,
   };
 }
 

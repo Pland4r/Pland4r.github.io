@@ -182,6 +182,9 @@ export const en: Copy = {
     howLongBody: 'Typical delivery time once your order is confirmed.',
     shipping: 'Shipping',
     flatRate: (country) => `Flat rate anywhere in ${country}.`,
+    freeInCities: (cities) => `Free in ${cities}`,
+    freeHere: 'Free',
+    elsewhere: (fee, country) => `Free in the cities above. ${fee} anywhere else in ${country}.`,
     flatRateFreeOver: (country, over) =>
       `Flat rate anywhere in ${country}. Free over ${over}.`,
   },
@@ -208,6 +211,10 @@ export const en: Copy = {
       'us where you are.',
     outsideAnywhere: (country) =>
       `We ship anywhere in ${country}. Tell us your city and we will confirm.`,
+    costQ: 'How much is delivery?',
+    costFree: (cities, fee, country) =>
+      `Free in ${cities}. ${fee} anywhere else in ${country}, paid to the courier along with the case.`,
+    costFlat: (fee, country) => `${fee} anywhere in ${country}, paid to the courier with the case.`,
     codQ: 'Can I pay on delivery?',
     codA: 'Yes — cash on delivery. You pay the courier when the case arrives.',
     officialQ: 'Are these official BMW, Porsche or Mercedes products?',

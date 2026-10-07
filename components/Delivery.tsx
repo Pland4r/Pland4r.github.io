@@ -43,12 +43,16 @@ export default function Delivery({ locale }: { locale: Locale }) {
   }
 
   if (d.fee !== null) {
+    const free = d.freeIn.length > 0;
     points.push({
       key: 'fee',
       label: copy.delivery.shipping,
-      title: `${d.fee} ${site.currency}`,
-      body:
-        d.freeOver !== null
+      // Lead with the free city rather than the fee: it is the better half of
+      // the offer, and most of the orders will be in it.
+      title: free ? copy.delivery.freeInCities(d.freeIn.join(' · ')) : `${d.fee} ${site.currency}`,
+      body: free
+        ? copy.delivery.elsewhere(`${d.fee} ${site.currency}`, country)
+        : d.freeOver !== null
           ? copy.delivery.flatRateFreeOver(country, `${d.freeOver} ${site.currency}`)
           : copy.delivery.flatRate(country),
     });

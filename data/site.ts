@@ -138,8 +138,14 @@ export const site = {
     /** e.g. '24–72h'. Empty hides the line rather than promising a time. */
     time: '',
 
-    /** e.g. 30 for a 30 DH flat rate, or null to leave it out. */
-    fee: null as number | null,
+    /**
+     * Cities where delivery costs nothing. Everywhere else pays `fee`.
+     * Empty means nowhere is free and `fee` applies to the whole country.
+     */
+    freeIn: ['Casablanca'] as string[],
+
+    /** What delivery costs outside `freeIn`. null leaves the line out. */
+    fee: 15 as number | null,
 
     /** e.g. 300 — orders above this ship free. null leaves it out. */
     freeOver: null as number | null,

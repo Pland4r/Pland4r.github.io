@@ -163,6 +163,9 @@ export const ar: Copy = {
     howLongBody: 'المدة المعتادة للتوصيل بعد تأكيد طلبك.',
     shipping: 'الشحن',
     flatRate: (country) => `سعر موحّد إلى كل أنحاء ${country}.`,
+    freeInCities: (cities) => `مجاني ف ${cities}`,
+    freeHere: 'مجاني',
+    elsewhere: (fee, country) => `مجاني فالمدن اللي فوق. ${fee} ف باقي ${country}.`,
     flatRateFreeOver: (country, over) => `سعر موحّد إلى كل أنحاء ${country}. مجاناً فوق ${over}.`,
   },
 
@@ -183,6 +186,10 @@ export const ar: Copy = {
     outsideCities: (cities, country) =>
       `نوصّل بانتظام إلى ${cities}، وإلى باقي ${country} عند الطلب. أخبرنا أين أنت.`,
     outsideAnywhere: (country) => `نشحن إلى كل أنحاء ${country}. أخبرنا بمدينتك ونؤكد لك.`,
+    costQ: 'بشحال التوصيل؟',
+    costFree: (cities, fee, country) =>
+      `مجاني ف ${cities}. ${fee} ف باقي ${country}، كتخلصهم لعامل التوصيل مع الجراب.`,
+    costFlat: (fee, country) => `${fee} ف كل أنحاء ${country}، كتخلصهم لعامل التوصيل مع الجراب.`,
     codQ: 'هل يمكنني الدفع عند الاستلام؟',
     codA: 'نعم — الدفع عند الاستلام. تدفع لعامل التوصيل عند وصول الجراب.',
     officialQ: 'هل هذه منتجات رسمية من BMW أو Porsche أو Mercedes؟',

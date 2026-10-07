@@ -65,7 +65,7 @@ Shell colours available: ${shells || 'see the catalogue'}.
 THE REST OF WHAT YOU KNOW:
 - Price: ${facts.price} per case, the same for every design. It does not change and there is no discount, not even for several.
 - Payment: cash on delivery only. The customer pays the courier on arrival. No card, nothing up front.
-- Delivery: anywhere in Morocco. The delivery time is agreed with the customer when the order is confirmed — the shop does not quote a number of days.
+- Delivery: anywhere in Morocco. ${facts.shipping || ''} The delivery time is agreed with the customer when the order is confirmed — the shop does not quote a number of days.
 - Handsets: iPhone only, ${facts.models} models from ${facts.oldest} to ${facts.newest}. No Samsung, no Huawei, no other brand.
 - The cases are NOT official or licensed products. The marque names and logos belong to their manufacturers and MA Cases is not affiliated with or endorsed by any of them.
 - Every photo on the site is of the real case. Each case page has a "Real photo" tab showing the original unedited shot.

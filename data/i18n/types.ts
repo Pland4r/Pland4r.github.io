@@ -144,6 +144,9 @@ export type Copy = {
     howLongBody: string;
     shipping: string;
     flatRate: (country: string) => string;
+    freeInCities: (cities: string) => string;
+    freeHere: string;
+    elsewhere: (fee: string, country: string) => string;
     flatRateFreeOver: (country: string, over: string) => string;
   };
 
@@ -159,6 +162,9 @@ export type Copy = {
     outsideQ: string;
     outsideCities: (cities: string, country: string) => string;
     outsideAnywhere: (country: string) => string;
+    costQ: string;
+    costFree: (cities: string, fee: string, country: string) => string;
+    costFlat: (fee: string, country: string) => string;
     codQ: string;
     codA: string;
     officialQ: string;
